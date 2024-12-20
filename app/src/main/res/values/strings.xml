@@ -1,0 +1,14 @@
+<resources>
+    <string name="app_name">TLC Analyzer</string>
+
+
+    <!--    intent keys-->
+    <string name="isStartedForResultKey">ExpectsResult</string>
+    <string name="sampleIndexKey">SampleIndex</string>
+    <string name="modeKey">Mode</string>
+
+    <!--    when sample index is not required-->
+    <string name="concentrationKey">Concentration</string>
+    <string name="rfArrayKey">RfArray</string>
+    <string name="pixelsArrayKey">pixelsArrayKey</string>
+</resources>
