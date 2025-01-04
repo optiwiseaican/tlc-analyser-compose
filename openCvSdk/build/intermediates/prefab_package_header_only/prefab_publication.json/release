@@ -1,0 +1,17 @@
+{
+  "installationFolder": "/Users/vanand/Desktop/VishalAP/TLCAnalyzerNew/openCvSdk/build/intermediates/prefab_package/release/prefab",
+  "gradlePath": ":openCvSdk",
+  "packageInfo": {
+    "packageName": "openCvSdk",
+    "packageSchemaVersion": 2,
+    "packageDependencies": [],
+    "modules": [
+      {
+        "moduleName": "opencv_jni_shared",
+        "moduleHeaders": "/Users/vanand/Desktop/VishalAP/TLCAnalyzerNew/openCvSdk/native/jni/include",
+        "moduleExportLibraries": [],
+        "abis": []
+      }
+    ]
+  }
+}

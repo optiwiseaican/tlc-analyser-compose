@@ -22,10 +22,13 @@
         android:theme="@style/Theme.AppCompat.Light"
         tools:targetApi="31">
         <activity
-            android:name=".activities.CapturedImagePreview"
+            android:name=".ui.activities.NewImageAnalysis"
             android:exported="false" />
         <activity
-            android:name=".activities.NewCameraActivity"
+            android:name=".ui.activities.CapturedImagePreview"
+            android:exported="false" />
+        <activity
+            android:name=".ui.activities.NewCameraActivity"
             android:exported="false"
             android:theme="@style/Theme.AppCompat.Light" />
         <activity
@@ -39,9 +42,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity
-            android:name=".activities.CameraActivity"
-            android:exported="false" />
     </application>
 
 </manifest>

@@ -11,7 +11,6 @@ plugins {
     id("kotlin-kapt")
 
 
-
 }
 
 android {
@@ -89,6 +88,7 @@ dependencies {
     implementation(libs.androidx.camera.lifecycle)
     implementation("androidx.camera:camera-core:1.4.0")
     implementation("androidx.camera:camera-camera2:1.4.0")
+    implementation(libs.androidx.media3.effect)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -111,8 +111,10 @@ dependencies {
 
     val room_version = "2.6.1"
     implementation("androidx.room:room-runtime:$room_version")
-    annotationProcessor("androidx.room:room-compiler:$room_version")
+    kapt("androidx.room:room-compiler:$room_version")
     implementation("androidx.room:room-ktx:$room_version")
 
+    implementation("io.coil-kt.coil3:coil-compose:3.0.4")
+    implementation("io.coil-kt.coil3:coil-network-okhttp:3.0.4")
 
 }

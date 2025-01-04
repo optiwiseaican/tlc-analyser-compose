@@ -1,14 +1,10 @@
 package com.aican.tlcanalyzer.ui.pages.dashboard
 
 import EnterProjectDetailsDialog
-import android.app.Activity
 import android.content.Intent
-import androidx.compose.foundation.background
+import android.widget.Toast
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -23,25 +19,30 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.aican.tlcanalyzer.R
-import com.aican.tlcanalyzer.activities.NewCameraActivity
+import com.aican.tlcanalyzer.ui.activities.NewCameraActivity
 import com.aican.tlcanalyzer.ui.components.topbar_navigation.CustomTopBarNavigation
 import com.aican.tlcanalyzer.ui.pages.dashboard.projectviews.DashboardProjectView
 import com.aican.tlcanalyzer.utils.AppUtils
+import com.aican.tlcanalyzer.viewmodel.project.ProjectViewModel
 import kotlinx.coroutines.launch
 
 @Composable
-fun DashboardScreen(modifier: Modifier = Modifier) {
+fun DashboardScreen(
+    modifier: Modifier = Modifier,
+    projectViewModel: ProjectViewModel = hiltViewModel()
+) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
 
@@ -50,6 +51,8 @@ fun DashboardScreen(modifier: Modifier = Modifier) {
         mutableStateOf(false)
     }
 
+
+    val allProjectList by projectViewModel.projects.collectAsState()
 
 
     ModalNavigationDrawer(
@@ -95,7 +98,7 @@ fun DashboardScreen(modifier: Modifier = Modifier) {
                     }
                 }
                 Column(modifier = Modifier.padding(contentPadding)) {
-                    DashboardProjectView()
+                    DashboardProjectView(allProjectList)
                 }
             }
 
@@ -108,12 +111,16 @@ fun DashboardScreen(modifier: Modifier = Modifier) {
                         showCustomDialog = false
                     },
                     onSaveClick = { name, description ->
-                        showCustomDialog = false
-                        val intent = Intent(context, NewCameraActivity::class.java).apply {
-                            putExtra("projectName", name)
-                            putExtra("projectDescription", description)
+                        if (name.isNotEmpty()) {
+                            showCustomDialog = false
+                            val intent = Intent(context, NewCameraActivity::class.java).apply {
+                                putExtra("projectName", name)
+                                putExtra("projectDescription", description)
+                            }
+                            context.startActivity(intent)
+                        }else{
+                            Toast.makeText(context, "Enter project name", Toast.LENGTH_SHORT).show()
                         }
-                        context.startActivity(intent)
                     },
                     projectName = "",
                     projectDescription = ""

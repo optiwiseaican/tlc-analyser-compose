@@ -22,4 +22,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "TLC Analyzer"
 include(":app")
- 
+include(":openCvSdk")
