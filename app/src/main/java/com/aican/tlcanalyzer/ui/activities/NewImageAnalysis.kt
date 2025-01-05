@@ -10,6 +10,7 @@ import androidx.core.view.WindowInsetsCompat
 import com.aican.tlcanalyzer.R
 import com.aican.tlcanalyzer.databinding.ActivityNewImageAnalysisBinding
 import com.aican.tlcanalyzer.ui.pages.image_analysis.AnalysisScreen
+import com.aican.tlcanalyzer.viewmodel.project.ImageAnalysisViewModel
 import com.aican.tlcanalyzer.viewmodel.project.ProjectViewModel
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -17,7 +18,10 @@ import dagger.hilt.android.AndroidEntryPoint
 class NewImageAnalysis : AppCompatActivity() {
 
     private val viewModel: ProjectViewModel by viewModels()
+    private val imageAnalysisViewModel: ImageAnalysisViewModel by viewModels()
+
     var projectId = ""
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -27,7 +31,11 @@ class NewImageAnalysis : AppCompatActivity() {
 
 
         setContent {
-            AnalysisScreen(projectViewModel = viewModel, projectId = projectId)
+            AnalysisScreen(
+                projectViewModel = viewModel,
+                projectId = projectId,
+                imageAnalysisViewModel = imageAnalysisViewModel
+            )
         }
 
 

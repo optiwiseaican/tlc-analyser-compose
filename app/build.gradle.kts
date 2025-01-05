@@ -89,6 +89,7 @@ dependencies {
     implementation("androidx.camera:camera-core:1.4.0")
     implementation("androidx.camera:camera-camera2:1.4.0")
     implementation(libs.androidx.media3.effect)
+    implementation(project(":openCvSdk"))
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -116,5 +117,7 @@ dependencies {
 
     implementation("io.coil-kt.coil3:coil-compose:3.0.4")
     implementation("io.coil-kt.coil3:coil-network-okhttp:3.0.4")
+
+    implementation(project(path = ":openCvSdk"))
 
 }

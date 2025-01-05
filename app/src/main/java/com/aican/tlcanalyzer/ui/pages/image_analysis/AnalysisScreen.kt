@@ -1,10 +1,5 @@
 package com.aican.tlcanalyzer.ui.pages.image_analysis
 
-import android.content.res.Configuration
-import android.provider.CalendarContract.Colors
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,22 +9,18 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Create
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -39,35 +30,29 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil3.compose.AsyncImage
-import coil3.request.ImageRequest
-import com.aican.tlcanalyzer.R
-import com.aican.tlcanalyzer.data.database.project.entities.Image
-import com.aican.tlcanalyzer.data.database.project.entities.ProjectDetails
 import com.aican.tlcanalyzer.ui.pages.image_analysis.components.ActionButton
 import com.aican.tlcanalyzer.ui.pages.image_analysis.components.TopPanel
 import com.aican.tlcanalyzer.ui.pages.image_analysis.components.ZoomableImage
+import com.aican.tlcanalyzer.viewmodel.project.ImageAnalysisViewModel
 import com.aican.tlcanalyzer.viewmodel.project.ProjectViewModel
-import java.io.File
 
 @Composable
 fun AnalysisScreen(
     modifier: Modifier = Modifier,
     projectViewModel: ProjectViewModel,
+    imageAnalysisViewModel: ImageAnalysisViewModel,
     projectId: String
 ) {
     val project by projectViewModel.observerProjectDetails(projectId).collectAsState(initial = null)
     val imageDetails by projectViewModel.observerProjectImages(projectId)
         .collectAsState(initial = emptyList())
+
+    val loadingIntensities by remember { mutableStateOf(false) }
 
     if (project == null) {
         Box(
@@ -100,9 +85,33 @@ fun AnalysisScreen(
                     )
                 }
             }
+            Spacer(modifier = Modifier.height(8.dp))
+
+            AnalysisLoaders(loadingIntensities)
+            Spacer(modifier = Modifier.height(8.dp))
 
             SpotDetectionUI()
 
+        }
+    }
+}
+
+@Composable
+fun AnalysisLoaders(loading: Boolean, loadingText: String = "Loading") {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        if (loading) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(text = loadingText)
+                Spacer(modifier = Modifier.width(8.dp))
+                CircularProgressIndicator(
+                    modifier = Modifier.then(Modifier.size(32.dp))
+                )
+
+            }
         }
     }
 }
