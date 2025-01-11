@@ -1,0 +1,13 @@
+#Mon Jan 06 16:30:11 IST 2025
+base.0=/Users/vanand/Desktop/VishalAP/TLCAnalyzerNew/openCvSdk/build/intermediates/dex/debugAndroidTest/mergeExtDexDebugAndroidTest/classes.dex
+base.1=/Users/vanand/Desktop/VishalAP/TLCAnalyzerNew/openCvSdk/build/intermediates/dex/debugAndroidTest/mergeLibDexDebugAndroidTest/0/classes.dex
+base.2=/Users/vanand/Desktop/VishalAP/TLCAnalyzerNew/openCvSdk/build/intermediates/dex/debugAndroidTest/mergeProjectDexDebugAndroidTest/0/classes.dex
+base.3=/Users/vanand/Desktop/VishalAP/TLCAnalyzerNew/openCvSdk/build/intermediates/dex/debugAndroidTest/mergeProjectDexDebugAndroidTest/2/classes.dex
+path.0=classes.dex
+path.1=0/classes.dex
+path.2=0/classes.dex
+path.3=2/classes.dex
+renamed.0=classes.dex
+renamed.1=classes2.dex
+renamed.2=classes3.dex
+renamed.3=classes4.dex

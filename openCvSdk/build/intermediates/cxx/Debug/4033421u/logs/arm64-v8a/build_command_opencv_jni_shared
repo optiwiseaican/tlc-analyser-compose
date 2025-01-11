@@ -1,0 +1,4 @@
+/Users/vanand/Library/Android/sdk/cmake/3.22.1/bin/ninja \
+  -C \
+  /Users/vanand/Desktop/VishalAP/TLCAnalyzerNew/openCvSdk/.cxx/Debug/4033421u/arm64-v8a \
+  opencv_jni_shared

@@ -45,4 +45,13 @@ class ProjectRepository @Inject constructor(private val projectDetailsDao: Proje
 
     // Fetch project count one-time
     suspend fun getProjectCount(): Int = projectDetailsDao.observeProjectCount().first()
+
+    suspend fun getNumberOfRfCountsByProjectId(projectId: String): Int =
+        projectDetailsDao.getNumberOfRfCountsByProjectId(projectId)
+
+    fun observeNumberOfRfCountsByProjectId(projectId: String): Flow<Int> =
+        projectDetailsDao.observeNumberOfRfCountsByProjectId(projectId)
+
+    suspend fun updateNumberOfRfCountsByProjectId(projectId: String, rfCounts: Int) =
+        projectDetailsDao.updateNumberOfRfCountsByProjectId(projectId, rfCounts)
 }

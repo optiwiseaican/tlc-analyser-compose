@@ -19,7 +19,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun TopPanel(title: String) {
+fun TopPanel(
+    title: String,
+    modifier: Modifier = Modifier,
+    onBack: () -> Unit,
+    onSettings: () -> Unit,
+    onCropAgain: () -> Unit
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -37,7 +43,7 @@ fun TopPanel(title: String) {
         Button(onClick = { /* Handle Save */ }) {
             Text(text = "Save")
         }
-        IconButton(onClick = { /* Handle Settings */ }) {
+        IconButton(onClick = { onSettings.invoke() }) {
             Icon(Icons.Default.Settings, contentDescription = "Settings")
         }
         IconButton(onClick = { /* Handle Crop Again */ }) {

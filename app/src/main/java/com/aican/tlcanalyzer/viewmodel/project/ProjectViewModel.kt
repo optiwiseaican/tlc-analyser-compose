@@ -80,4 +80,16 @@ class ProjectViewModel @Inject constructor(
     suspend fun getProjectImages(projectId: String): List<Image> {
         return imageRepository.getAllImagesByProjectId(projectId)
     }
+
+    suspend fun getNumberOfRfCountsByProjectId(projectId: String): Int {
+        return projectRepository.getNumberOfRfCountsByProjectId(projectId)
+    }
+
+    fun observeNumberOfRfCountsByProjectId(projectId: String): Flow<Int> {
+        return projectRepository.observeNumberOfRfCountsByProjectId(projectId)
+    }
+
+    suspend fun updateNumberOfRfCountsByProjectId(projectId: String, rfCounts: Int) {
+        projectRepository.updateNumberOfRfCountsByProjectId(projectId, rfCounts)
+    }
 }

@@ -25,3 +25,12 @@ sealed class DashboardRoute {
     @Serializable
     data object ROUTE_DASHBOARD : DashboardRoute()
 }
+
+sealed class ImageAnalysisRoute {
+    @Serializable
+    data object ROUTE_IMAGE_ANALYSIS : ImageAnalysisRoute()
+
+    @Serializable
+    data object ROUTE_IMAGE_ANALYSIS_SETTINGS : ImageAnalysisRoute()
+
+}

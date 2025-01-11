@@ -19,7 +19,7 @@ android {
 
     defaultConfig {
         applicationId = "com.aican.tlcanalyzer"
-        minSdk = 24
+        minSdk = 26
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
@@ -119,5 +119,11 @@ dependencies {
     implementation("io.coil-kt.coil3:coil-network-okhttp:3.0.4")
 
     implementation(project(path = ":openCvSdk"))
+    implementation("co.yml:ycharts:2.1.0")
+
+    implementation("com.patrykandpatrick.vico:compose:1.16.0")
+    implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
+
+
 
 }

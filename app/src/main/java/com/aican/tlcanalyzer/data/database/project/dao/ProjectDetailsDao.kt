@@ -55,4 +55,17 @@ interface ProjectDetailsDao {
     // One-time fetch for count of all projects
     @Query("SELECT COUNT(*) FROM ProjectDetails")
     suspend fun getProjectCount(): Int
+
+    // Get number of RF counts for a specific project
+    @Query("SELECT noOfRfCounts FROM ProjectDetails WHERE projectId = :projectId")
+    suspend fun getNumberOfRfCountsByProjectId(projectId: String): Int
+
+    @Query("SELECT noOfRfCounts FROM ProjectDetails WHERE projectId = :projectId")
+     fun observeNumberOfRfCountsByProjectId(projectId: String): Flow<Int>
+
+
+    // Update the number of RF counts for a specific project
+    @Query("UPDATE ProjectDetails SET noOfRfCounts = :rfCounts WHERE projectId = :projectId")
+    suspend fun updateNumberOfRfCountsByProjectId(projectId: String, rfCounts: Int)
+
 }
