@@ -11,6 +11,8 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -48,6 +50,44 @@ class ProjectViewModel @Inject constructor(
             }
         }
     }
+
+    private val _cachedImagesList = MutableStateFlow<List<Image>>(emptyList())
+    val cachedImagesList: StateFlow<List<Image>> = _cachedImagesList
+
+    private val _cachedIntensityParts = MutableStateFlow<Int?>(null)
+    val cachedIntensityParts: StateFlow<Int?> = _cachedIntensityParts
+
+    fun cacheImageDetails(projectId: String) {
+        viewModelScope.launch {
+            val images = observerProjectImages(projectId).first()
+            _cachedImagesList.value = images
+        }
+    }
+
+    fun cacheIntensityParts(projectId: String) {
+        viewModelScope.launch {
+            val parts = observeNumberOfRfCountsByProjectId(projectId).first()
+            _cachedIntensityParts.value = parts
+        }
+    }
+
+    private val _selectedImageDetail = MutableStateFlow<Image?>(null)
+    val selectedImageDetail: StateFlow<Image?> = _selectedImageDetail
+
+    fun observeImageDetailByImageId(imageId: String) {
+        viewModelScope.launch {
+            imageRepository.observeImageById(imageId)
+                .distinctUntilChanged()
+                .collect { image ->
+                    _selectedImageDetail.value = image
+                }
+        }
+    }
+
+    suspend fun updateImageDetailByImageId(image: Image) {
+        imageRepository.updateImage(image)
+    }
+
 
     fun insertProjectDetails(projectDetails: ProjectDetails) {
         viewModelScope.launch {
@@ -87,9 +127,12 @@ class ProjectViewModel @Inject constructor(
 
     fun observeNumberOfRfCountsByProjectId(projectId: String): Flow<Int> {
         return projectRepository.observeNumberOfRfCountsByProjectId(projectId)
+            .distinctUntilChanged()
     }
 
     suspend fun updateNumberOfRfCountsByProjectId(projectId: String, rfCounts: Int) {
         projectRepository.updateNumberOfRfCountsByProjectId(projectId, rfCounts)
     }
+
+
 }

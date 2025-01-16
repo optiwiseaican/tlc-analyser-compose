@@ -23,6 +23,9 @@ class ImageRepository @Inject constructor(
     fun observeImageCountByProjectId(projectId: String): Flow<Int> =
         imageDao.observeImageCountByProjectId(projectId)
 
+    fun observeImageById(imageId: String): Flow<Image?> =
+        imageDao.observeImageById(imageId)
+
     // One-time fetch for image count by Project ID
     suspend fun getImageCountByProjectId(projectId: String): Int =
         imageDao.getImageCountByProjectId(projectId)
@@ -64,4 +67,6 @@ class ImageRepository @Inject constructor(
         // Delete the image itself
         imageDao.deleteImageById(imageId)
     }
+
+
 }

@@ -19,6 +19,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -41,8 +42,15 @@ import kotlinx.coroutines.launch
 @Composable
 fun DashboardScreen(
     modifier: Modifier = Modifier,
-    projectViewModel: ProjectViewModel = hiltViewModel()
+    projectViewModel: ProjectViewModel = hiltViewModel(),
 ) {
+
+    DisposableEffect(Unit) {
+        println("DashboardScreen Created")
+        onDispose {
+            println("DashboardScreen Disposed")
+        }
+    }
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
 
@@ -118,7 +126,7 @@ fun DashboardScreen(
                                 putExtra("projectDescription", description)
                             }
                             context.startActivity(intent)
-                        }else{
+                        } else {
                             Toast.makeText(context, "Enter project name", Toast.LENGTH_SHORT).show()
                         }
                     },

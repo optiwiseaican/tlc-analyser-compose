@@ -46,7 +46,7 @@ fun TopPanel(
         IconButton(onClick = { onSettings.invoke() }) {
             Icon(Icons.Default.Settings, contentDescription = "Settings")
         }
-        IconButton(onClick = { /* Handle Crop Again */ }) {
+        IconButton(onClick = { onCropAgain.invoke() }) {
             Icon(Icons.Default.Create, contentDescription = "Crop Again", tint = Color.Red)
         }
     }
