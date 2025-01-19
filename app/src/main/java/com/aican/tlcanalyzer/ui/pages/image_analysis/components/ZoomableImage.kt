@@ -201,11 +201,9 @@ fun ZoomableImage(
 
         Box(
             modifier = Modifier
-                .background(Color.Gray)
                 .fillMaxWidth()
         ) {
             Box(modifier = Modifier
-                .background(Color.White)
                 .height(500.dp)
                 .clip(RectangleShape)
                 .pointerInput(Unit) {

@@ -7,6 +7,9 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface ContourPointDao {
 
+    @Query("DELETE FROM ContourPoints")
+    suspend fun nukeTable()
+
     // Observe points as Flow
     @Query("SELECT * FROM ContourPoints WHERE contourId = :contourId")
     fun observeAllContourPointsByContourId(contourId: String): Flow<List<ContourPoint>>

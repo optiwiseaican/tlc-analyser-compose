@@ -1,8 +1,8 @@
 package com.aican.tlcanalyzer.data.repository.project
 
+import androidx.room.Transaction
 import com.aican.tlcanalyzer.data.database.project.dao.ContourDataDao
 import com.aican.tlcanalyzer.data.database.project.dao.ContourPointDao
-import com.aican.tlcanalyzer.data.database.project.dao.ImageDao
 import com.aican.tlcanalyzer.data.database.project.dao.ManualContourDetailsDao
 import com.aican.tlcanalyzer.data.database.project.entities.ContourData
 import com.aican.tlcanalyzer.data.database.project.entities.ContourPoint
@@ -15,6 +15,26 @@ class ContourRepository @Inject constructor(
     private val contourPointDao: ContourPointDao,
     private val manualContourDetailsDao: ManualContourDetailsDao
 ) {
+
+    suspend fun nukeContourDataTable() = contourDataDao.nukeTable()
+    suspend fun nukeContourPointsTable() = contourPointDao.nukeTable()
+
+    @Transaction
+    suspend fun clearAllContours(imageId: String) {
+        // get all contours by imageId
+        val allContours = getAllContoursByImageId(imageId)
+
+        allContours.forEach { contour ->
+            deleteAllContourPointsByContourId(contour.contourId)
+        }
+
+
+        // delete all details
+        contourDataDao.deleteContoursByImageId(imageId)
+
+//        deleteManualDetailsByContourId(contourId)
+
+    }
 
     // CRUD Operations for ContourData
 
@@ -33,6 +53,10 @@ class ContourRepository @Inject constructor(
     // Update an existing contour
     suspend fun updateContour(contour: ContourData) =
         contourDataDao.updateContourById(contour)
+
+    suspend fun insertContours(contours: List<ContourData>) =
+        contourDataDao.insertContours(contours)
+
 
     // Insert a new contour
     suspend fun insertContour(contour: ContourData) =
@@ -66,6 +90,7 @@ class ContourRepository @Inject constructor(
     suspend fun deleteAllContourPointsByContourId(contourId: String) =
         contourPointDao.deleteAllPointsByContourId(contourId)
 
+
     // CRUD Operations for ManualContourDetails
 
     // Observe manual details by contour ID as Flow
@@ -83,4 +108,15 @@ class ContourRepository @Inject constructor(
     // Update existing manual contour details
     suspend fun updateManualContourDetails(details: ManualContourDetails) =
         manualContourDetailsDao.updateManualContourDetails(details)
+
+
+    @Transaction
+    suspend fun insertContoursAndPoints(
+        contourDataList: List<ContourData>,
+        contourPointList: List<ContourPoint>
+    ) {
+        contourDataDao.deleteContoursByImageId(contourDataList.first().imageId)
+        contourDataDao.insertContours(contourDataList)
+        contourPointDao.insertContourPoints(contourPointList)
+    }
 }

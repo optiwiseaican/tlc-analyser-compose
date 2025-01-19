@@ -1,4 +1,6 @@
-package com.aican.tlcanalyzer.domain.model.graphs
+package com.aican.tlcanalyzer.domain.states.graph
+
+import com.aican.tlcanalyzer.domain.model.graphs.GraphPoint
 
 sealed class IntensityDataState {
     data object Loading : IntensityDataState()

@@ -21,6 +21,13 @@ data class ContourData(
     @PrimaryKey val contourId: String, // Unique ID for the contour
     @ColumnInfo(name = "imageId") val imageId: String, // Foreign Key linking to Image
     val name: String,
+    val area: String,
+    val volume: String,
+    val rf: String,
+    val rfTop: String,
+    val rfBottom: String,
+    val cv: String,
+    val chemicalName: String,
     val type: ContourType // Type of the contour (AUTO, RECTANGULAR, CIRCULAR)
 )
 

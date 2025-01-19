@@ -1,12 +1,21 @@
 package com.aican.tlcanalyzer.data.database.project.dao
 
-import androidx.room.*
+import androidx.room.Dao
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
+import androidx.room.Query
+import androidx.room.Update
 import com.aican.tlcanalyzer.data.database.project.entities.ContourData
 import com.aican.tlcanalyzer.data.database.project.entities.ContourType
 import kotlinx.coroutines.flow.Flow
 
+
 @Dao
 interface ContourDataDao {
+
+
+    @Query("DELETE FROM ContourData")
+    suspend fun nukeTable()
 
     // Observe contours as Flow
     @Query("SELECT * FROM ContourData WHERE imageId = :imageId")
@@ -44,6 +53,9 @@ interface ContourDataDao {
 
     @Query("DELETE FROM ContourData WHERE contourId = :contourId")
     suspend fun deleteContourById(contourId: String)
+
+    @Query("DELETE FROM ContourData WHERE imageId = :imageId")
+    suspend fun deleteContoursByImageId(imageId: String)
 
     @Update
     suspend fun updateContourById(contour: ContourData)
