@@ -2,7 +2,10 @@ package com.aican.tlcanalyzer.data.repository.project.image_analysis
 
 import com.aican.tlcanalyzer.analysis.IntensityDataProcessor
 import com.aican.tlcanalyzer.analysis.OpenCVOperations
+import com.aican.tlcanalyzer.data.database.project.entities.ContourData
 import com.aican.tlcanalyzer.domain.model.spots.AutoSpotModel
+import com.aican.tlcanalyzer.domain.model.spots.ContourResult
+import org.opencv.core.MatOfPoint
 import javax.inject.Inject
 
 class ImageAnalysisRepository @Inject constructor(
@@ -18,7 +21,7 @@ class ImageAnalysisRepository @Inject constructor(
         thresholdVal: Int,
         numberOfSpots: Int,
         message: (String) -> Unit
-    ) =
+    ): ArrayList<ContourResult> =
         openCVOperations.generateSpots(
             imagePath,
             thresholdVal,

@@ -10,6 +10,32 @@ object AppUtils {
     const val APP_NAME = "TLC Analyser"
     val UiColor1 = Color.Black
 
+    fun getColorByIndex(index: Int): String {
+        val colorList = listOf(
+            "#FF0000", // Red
+            "#00FF00", // Green
+            "#0000FF", // Blue
+            "#FFFF00", // Yellow
+            "#FF00FF", // Magenta
+            "#00FFFF", // Cyan
+            "#800000", // Maroon
+            "#808000", // Olive
+            "#008000", // Dark Green
+            "#800080", // Purple
+            "#808080", // Gray
+            "#FFA500", // Orange
+            "#A52A2A", // Brown
+            "#8A2BE2", // Blue Violet
+            "#5F9EA0", // Cadet Blue
+            "#7FFF00", // Chartreuse
+            "#D2691E", // Chocolate
+            "#6495ED", // Cornflower Blue
+            "#DC143C", // Crimson
+            "#00CED1"  // Dark Turquoise
+        )
+        return colorList[index % colorList.size] // Cycle through colors if index exceeds the list
+    }
+
 
     fun generateUniqueColor(contourId: String, imageId: String, existingColors: Set<Int>): Int {
         val predefinedColors = listOf(
@@ -29,6 +55,10 @@ object AppUtils {
 
         return color
     }
+
+    // Extension function to format Double to two decimal points
+    fun Double.format(digits: Int): String = "%.${digits}f".format(this)
+
 
     fun generateRandomId(prefix: String, length: Int): String {
         val allowedChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"

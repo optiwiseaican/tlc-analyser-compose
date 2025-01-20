@@ -1,5 +1,6 @@
 package com.aican.tlcanalyzer.domain.model.spots
 
+import com.aican.tlcanalyzer.data.database.project.entities.ContourData
 import org.opencv.core.MatOfPoint
 
 data class AutoSpotModel(
@@ -7,4 +8,9 @@ data class AutoSpotModel(
     val contourId: String,
     val name: String,
     val matOfPoint: MatOfPoint
+)
+
+data class ContourResult(
+    val matOfPoint: MatOfPoint,
+    val contourData: ContourData
 )

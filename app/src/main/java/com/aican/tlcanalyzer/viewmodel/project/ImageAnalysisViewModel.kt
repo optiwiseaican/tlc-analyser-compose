@@ -10,6 +10,7 @@ import com.aican.tlcanalyzer.data.repository.project.image_analysis.ImageAnalysi
 import com.aican.tlcanalyzer.domain.model.graphs.GraphPoint
 import com.aican.tlcanalyzer.domain.states.graph.IntensityDataState
 import com.aican.tlcanalyzer.domain.model.spots.AutoSpotModel
+import com.aican.tlcanalyzer.domain.model.spots.ContourResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,6 +21,7 @@ import org.opencv.core.MatOfPoint
 import org.opencv.core.Point
 import org.opencv.imgproc.Imgproc
 import java.io.File
+import java.util.Collections.reverse
 import javax.inject.Inject
 
 @HiltViewModel
@@ -33,51 +35,82 @@ class ImageAnalysisViewModel @Inject constructor(
     private val _isContoursFetched = MutableStateFlow(false)
     val isContoursFetched: StateFlow<Boolean> = _isContoursFetched
 
-    suspend fun saveAutoContourDataToDatabase(imageId: String, contours: ArrayList<MatOfPoint>) {
-//        viewModelScope.launch {
+    suspend fun saveAutoContourDataToDatabase(
+        imageId: String,
+        contourDataList: ArrayList<ContourResult>
+    ) {
         try {
             // Lists to hold data for batch insertion
-            val contourDataList = mutableListOf<ContourData>()
+            val newContourDataList = mutableListOf<ContourData>()
             val contourPointList = mutableListOf<ContourPoint>()
 
-            // Iterate through contours and prepare data
-            contours.forEachIndexed { index, contour ->
+            // Iterate through `contourDataList` which contains both contour and its data
+            contourDataList.forEachIndexed { index, contourResult ->
                 val contourId = "C_$imageId${index + 1}"
+                val contour = contourResult.matOfPoint
+                val contourData = contourResult.contourData
 
-                // Calculate area
-                val area = Imgproc.contourArea(contour)
-
-                // Calculate volume (assuming a height of 1 for a 2D contour)
-                val volume = area * 1
-
-                // Calculate RF (Retention Factor) as a placeholder value
-                // Formula: RF = distance moved by solute / distance moved by solvent
-                val rf = calculateRF(contour)
-
-                // Calculate RF Top and Bottom as placeholders
-                val rfTop = rf * 1.1 // Example multiplier for top
-                val rfBottom = rf * 0.9 // Example multiplier for bottom
-
-                // Calculate CV (Coefficient of Variation) as a placeholder
-                // Formula: CV = (Standard Deviation / Mean) * 100
-                val cv = calculateCV(contour)
-
-                // Create ContourData
-                contourDataList.add(
+                // Add ContourData directly from the provided ContourData in ContourResult
+                newContourDataList.add(
                     ContourData(
                         contourId = contourId,
                         imageId = imageId,
                         name = (index + 1).toString(),
-                        area = area.toString(),
-                        volume = volume.toString(),
-                        rf = rf.toString(),
-                        rfTop = rfTop.toString(),
-                        rfBottom = rfBottom.toString(),
-                        cv = cv.toString(),
-                        chemicalName = "Unknown",
-                        type = ContourType.AUTO
+                        area = contourData.area,
+                        volume = contourData.volume,
+                        rf = contourData.rf,
+                        rfTop = contourData.rfTop,
+                        rfBottom = contourData.rfBottom,
+                        cv = contourData.cv,
+                        chemicalName = contourData.chemicalName,
+                        type = contourData.type
                     )
                 )
+
+                // Add ContourPoints
+                contourPointList.addAll(
+                    contour.toList().mapIndexed { i, point ->
+                        val contourPointId = "P_$contourId${i + 1}"
+                        ContourPoint(
+                            contourPointId = contourPointId,
+                            contourId = contourId,
+                            x = point.x.toFloat(),
+                            y = point.y.toFloat()
+                        )
+                    }
+                )
+            }
+
+            // Batch insert all contour points and data
+            contourRepository.insertContoursAndPoints(newContourDataList, contourPointList)
+
+            println("Successfully saved ${newContourDataList.size} contours and ${contourPointList.size} points.")
+
+        } catch (e: Exception) {
+            println("Error saving contours: ${e.message}")
+            e.printStackTrace()
+        }
+    }
+
+    suspend fun saveAutoContourDataToDatabase2(
+        imageId: String,
+        contours: ArrayList<MatOfPoint>,
+        contourDataList: ArrayList<ContourData>
+    ) {
+        try {
+            // Lists to hold data for batch insertion
+            val contourPointList = mutableListOf<ContourPoint>()
+
+            // Iterate through contours and use data from contourDataList
+            contours.forEachIndexed { index, contour ->
+                val contourId = "C_$imageId${index + 1}"
+
+                // Get corresponding contour data from contourDataList
+                val contourData = contourDataList.getOrNull(index)
+                if (contourData == null) {
+                    println("Error: No contour data available for contour at index $index")
+                    return@forEachIndexed
+                }
 
                 // Create ContourPoints
                 contourPointList.addAll(
@@ -97,13 +130,12 @@ class ImageAnalysisViewModel @Inject constructor(
             contourRepository.insertContoursAndPoints(contourDataList, contourPointList)
 
             println("Successfully saved ${contourDataList.size} contours and ${contourPointList.size} points.")
-
         } catch (e: Exception) {
             println("Error saving contours: ${e.message}")
             e.printStackTrace()
         }
-//        }
     }
+
 
     // Helper function to calculate RF (Retention Factor)
     private fun calculateRF(contour: MatOfPoint): Double {
@@ -127,7 +159,7 @@ class ImageAnalysisViewModel @Inject constructor(
         threshold: Int,
         numberOfSpots: Int,
         message: (String) -> Unit
-    ): ArrayList<MatOfPoint> {
+    ): ArrayList<ContourResult> {
         return withContext(Dispatchers.IO) {
             // Perform the repository operation
             _isContoursFetched.value = true
@@ -138,7 +170,6 @@ class ImageAnalysisViewModel @Inject constructor(
 
         }
     }
-
 
     fun resetContoursFetched() {
         _isContoursFetched.value = false
@@ -165,15 +196,23 @@ class ImageAnalysisViewModel @Inject constructor(
     private val _autoGeneratedSpots = MutableStateFlow<List<AutoSpotModel>>(emptyList())
     val autoGeneratedSpots: StateFlow<List<AutoSpotModel>> = _autoGeneratedSpots
 
+    private val _allContourData = MutableStateFlow<List<ContourData>>(emptyList())
+    val allContourData: StateFlow<List<ContourData>> = _allContourData
+
     fun fetchAutoGeneratedSpotsFromDatabase(imageId: String) {
         viewModelScope.launch(Dispatchers.IO) { // Use Dispatchers.IO for database operations
 
-            _autoGeneratedSpots.value = emptyList()
+            _autoGeneratedSpots.value = emptyList() // Clear current list before fetching new data
             val allContours = contourRepository.getAllContoursByImageId(imageId = imageId)
 
             println("Contour length from database in viewmodel : ${allContours.size}")
+            _allContourData.value = allContours
 
-            val autoSpotList = allContours.map { contour ->
+            // Filter for AUTO contours first
+            val filteredContours = allContours.filter { it.type == ContourType.AUTO }
+
+            // Map filtered contours to AutoSpotModel
+            val autoSpotList = filteredContours.map { contour ->
                 val contourPoints =
                     contourRepository.getAllContourPointsByContourId(contour.contourId)
                 val contourMatOfPoint = MatOfPoint().apply {
@@ -190,7 +229,7 @@ class ImageAnalysisViewModel @Inject constructor(
                 )
             }
 
-            // Update the StateFlow with a new list
+            // Update the StateFlow with the new list
             _autoGeneratedSpots.value = autoSpotList
         }
     }
@@ -246,8 +285,9 @@ class ImageAnalysisViewModel @Inject constructor(
                 IntensityDataState.Empty
             } else {
                 val mappedData = rawData.map {
-                    GraphPoint(x = it.rf.toFloat() * parts, y = it.intensity.toFloat())
+                    GraphPoint(x = parts - (it.rf.toFloat() * parts), y = it.intensity.toFloat())
                 }
+                reverse(mappedData)
                 IntensityDataState.Success(mappedData)
             }
         }.onSuccess {

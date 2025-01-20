@@ -2,10 +2,11 @@ package com.aican.tlcanalyzer.analysis
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.widget.Toast
+import com.aican.tlcanalyzer.data.database.project.entities.ContourData
+import com.aican.tlcanalyzer.data.database.project.entities.ContourType
 import com.aican.tlcanalyzer.domain.model.spots.AutoSpotModel
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import com.aican.tlcanalyzer.domain.model.spots.ContourResult
+import com.aican.tlcanalyzer.utils.AppUtils.format
 import org.opencv.android.Utils
 import org.opencv.core.Mat
 import org.opencv.core.MatOfPoint
@@ -14,8 +15,8 @@ import org.opencv.core.Scalar
 import org.opencv.imgproc.Imgproc
 import java.io.File
 import javax.inject.Inject
+import kotlin.math.pow
 
-//import java.util.ArrayList
 
 class OpenCVOperations @Inject constructor() {
 
@@ -38,7 +39,139 @@ class OpenCVOperations @Inject constructor() {
         return bitmap // Return the Bitmap representing the grayscale image
     }
 
+
     suspend fun generateSpots(
+        imagePath: String,
+        threshVal: Int,
+        contourImagePath: String,
+        numberOfSpots: Int,
+        message: (String) -> Unit
+    ): ArrayList<ContourResult> {
+        val outFile = File(imagePath)
+        if (!outFile.exists()) {
+            message("Image file not found at path: $imagePath")
+            return ArrayList()
+        }
+
+        val myBitmap = BitmapFactory.decodeFile(outFile.absolutePath)
+        val firstImage = Mat()
+        Utils.bitmapToMat(myBitmap, firstImage)
+
+        val originalImageCopy = Mat()
+        firstImage.copyTo(originalImageCopy)
+
+        // Grayscale conversion
+        val grayScaleImage = Mat()
+        Imgproc.cvtColor(firstImage, grayScaleImage, Imgproc.COLOR_BGR2GRAY)
+
+        // Apply threshold to create a binary image
+        val binary = Mat()
+        Imgproc.threshold(
+            grayScaleImage,
+            binary,
+            threshVal.toDouble(),
+            255.0,
+            Imgproc.THRESH_BINARY
+        )
+
+        // Find contours
+        val contours = ArrayList<MatOfPoint>()
+        val hierarchy = Mat()
+        Imgproc.findContours(
+            binary,
+            contours,
+            hierarchy,
+            Imgproc.RETR_TREE,
+            Imgproc.CHAIN_APPROX_SIMPLE
+        )
+
+        // Sort contours by area in descending order
+        contours.sortWith { c1, c2 ->
+            val area1 = Imgproc.contourArea(c1)
+            val area2 = Imgproc.contourArea(c2)
+            area2.compareTo(area1)
+        }
+
+        // Limit to the first `numberOfSpots` contours
+        val limitedContours = ArrayList<MatOfPoint>(contours.take(numberOfSpots + 1))
+        if (limitedContours.isNotEmpty()) {
+            limitedContours.removeAt(0)
+        }
+
+        val contourResults = ArrayList<ContourResult>()
+
+        limitedContours.forEachIndexed { index, contour ->
+            val contourId = "C_${index + 1}"
+
+            // Calculate area
+            val area = Imgproc.contourArea(contour).format(2)
+
+            // Calculate bounding rectangle and center point
+            val boundingRect = Imgproc.boundingRect(contour)
+            val centerPoint = Point(
+                boundingRect.x + (boundingRect.width / 2.0),
+                boundingRect.y + (boundingRect.height / 2.0)
+            )
+
+            // Calculate contour distance (distance traveled by center point)
+            val contourDistance = Math.sqrt(centerPoint.x.pow(2) + centerPoint.y.pow(2))
+
+            // Calculate solvent front distance (assuming a linear gradient)
+            val solventFrontDistance =
+                ((firstImage.height() / 2.0) * (1.0 - (threshVal.toDouble() / 255.0)))
+
+            // Calculate RF value
+            val rf = (10 - (contourDistance / solventFrontDistance)) / 10.0
+
+            // Calculate RF Top and Bottom
+            val rfTop = (rf * 1.1).format(2)
+            val rfBottom = (rf * 0.9).format(2)
+
+//            // assuming you have the image height stored in a variable called "imageHeight"
+//            val normalizedTopY: Double = 1 - (topY.toDouble() / imageHeight)
+//            val normalizedBaseY: Double = 1 - (baseY.toDouble() / imageHeight)
+
+            // Calculate normalized positions
+            val normalizedTopY = (1 - (boundingRect.y.toDouble() / firstImage.height())).format(2)
+            val normalizedBaseY =
+                (1 - ((boundingRect.y + boundingRect.height).toDouble() / firstImage.height())).format(
+                    2
+                )
+
+            val normalizedCenterY =
+                (1 - (boundingRect.y + (boundingRect.height / 2.0)) / firstImage.height()).format(2)
+
+            // Calculate CV
+            val cv = (1 / rf.toDouble()).format(2)
+
+            // Calculate volume (area * distance difference)
+            val volume =
+                (area.toDouble() * Math.abs(solventFrontDistance - contourDistance)).format(2)
+
+            // Create ContourData
+            val contourData = ContourData(
+                contourId = contourId,
+                imageId = imagePath,
+                name = (index + 1).toString(),
+                area = area,
+                volume = volume,
+                rf = rf.format(2),
+                rfTop = normalizedTopY,
+                rfBottom = normalizedBaseY,
+                cv = cv,
+                chemicalName = "Unknown",
+                type = ContourType.AUTO
+            )
+
+            // Add the combined result to the list
+            contourResults.add(ContourResult(matOfPoint = contour, contourData = contourData))
+        }
+
+        return contourResults
+    }
+
+
+    suspend fun generateSpots2(
         imagePath: String,
         threshVal: Int,
         contourImagePath: String,
