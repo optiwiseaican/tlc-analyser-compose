@@ -90,6 +90,7 @@ dependencies {
     implementation("androidx.camera:camera-camera2:1.4.0")
     implementation(libs.androidx.media3.effect)
     implementation(project(":openCvSdk"))
+    implementation(libs.androidx.exifinterface)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

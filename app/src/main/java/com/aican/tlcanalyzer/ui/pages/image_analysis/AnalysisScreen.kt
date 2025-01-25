@@ -1,33 +1,26 @@
 package com.aican.tlcanalyzer.ui.pages.image_analysis
 
+import android.app.Activity
+import android.content.Intent
+import android.graphics.BitmapFactory
+import android.graphics.Rect
+import android.net.Uri
 import android.widget.Toast
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -40,34 +33,39 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.viewModelScope
+import com.aican.tlcanalyzer.data.database.project.entities.ContourData
+import com.aican.tlcanalyzer.data.database.project.entities.ContourType
 import com.aican.tlcanalyzer.data.database.project.entities.Image
+import com.aican.tlcanalyzer.domain.model.spots.ManualContourResult
 import com.aican.tlcanalyzer.domain.states.graph.IntensityDataState
 import com.aican.tlcanalyzer.domain.states.image.ImageState
-import com.aican.tlcanalyzer.ui.pages.image_analysis.components.ActionButton
+import com.aican.tlcanalyzer.libraries.cropper.CropImage
+import com.aican.tlcanalyzer.libraries.cropper.CropImageView
+import com.aican.tlcanalyzer.ui.activities.DrawRectangleCont
+import com.aican.tlcanalyzer.ui.pages.image_analysis.components.AddSpotDialog
 import com.aican.tlcanalyzer.ui.pages.image_analysis.components.AnalysisContent
 import com.aican.tlcanalyzer.ui.pages.image_analysis.components.LoadingScreen
 import com.aican.tlcanalyzer.ui.pages.image_analysis.components.TopPanel
-import com.aican.tlcanalyzer.ui.pages.image_analysis.components.ZoomableImage
+import com.aican.tlcanalyzer.utils.RegionOfInterest
+import com.aican.tlcanalyzer.utils.SharedStates
 import com.aican.tlcanalyzer.viewmodel.project.ImageAnalysisViewModel
 import com.aican.tlcanalyzer.viewmodel.project.IntensityChartViewModel
 import com.aican.tlcanalyzer.viewmodel.project.ProjectViewModel
-import com.github.mikephil.charting.charts.LineChart
-import com.github.mikephil.charting.data.Entry
-import com.github.mikephil.charting.data.LineData
-import com.github.mikephil.charting.data.LineDataSet
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.io.File
-import  java.util.ArrayList
+import java.text.DecimalFormat
+import kotlin.math.abs
+import kotlin.math.sqrt
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
+import com.aican.tlcanalyzer.ui.pages.image_analysis.intensity_plot.IntensityPlotScreen
 
 @Composable
 fun AnalysisScreen(
@@ -76,15 +74,11 @@ fun AnalysisScreen(
     imageAnalysisViewModel: ImageAnalysisViewModel,
     intensityChartViewModel: IntensityChartViewModel,
     projectId: String,
-    onNavigate: (String) -> Unit = {}
+    onNavigate: (String) -> Unit = {},
+    onIntensityPlot: () -> Unit = {}
 ) {
 
-    DisposableEffect(Unit) {
-        println("AnalysisScreen Created")
-        onDispose {
-            println("AnalysisScreen Disposed")
-        }
-    }
+    val context = LocalContext.current
 
     // Observe state from ViewModels
     val project by projectViewModel.observerProjectDetails(projectId).collectAsState(initial = null)
@@ -101,6 +95,7 @@ fun AnalysisScreen(
     var numberOfSpots by remember { mutableIntStateOf(1) }
 
     val autoGeneratedSpots by imageAnalysisViewModel.autoGeneratedSpots.collectAsState()
+    val manualSpots by imageAnalysisViewModel.manualSpots.collectAsState()
 
 
     var contourDataSavedToDatabase by rememberSaveable {
@@ -109,21 +104,44 @@ fun AnalysisScreen(
 
     val imageState = remember { mutableStateOf(ImageState()) } // State for the image section
 
-    val contourDataList = imageAnalysisViewModel.allContourData.collectAsState()
+    val contourDataList = imageAnalysisViewModel.allAutoGeneratedSpotsData.collectAsState()
 
+    val manualRectContourListState by SharedStates.manualRectContourListState.collectAsState()
 
-    LaunchedEffect(autoGeneratedSpots) {
-        if (autoGeneratedSpots.isNotEmpty() && imageDetail != null) {
+    var showAddSpotDialog by remember { mutableStateOf(false) }
+    var showRemoveOrEditSpotDialog by remember { mutableStateOf(false) }
+
+    LaunchedEffect(manualRectContourListState) {
+        // React to changes in shared state
+        println("Shared State Changed: $manualRectContourListState")
+
+        if (manualRectContourListState.isNotEmpty() && imageDetail != null) {
+            imageAnalysisViewModel.saveManualContourListToDatabase(
+                type = ContourType.RECTANGULAR,
+                imageDetail!!.imageId,
+                manualRectContourListState
+            )
+            contourDataSavedToDatabase = true
+//            contourDataSavedToDatabase = true
+        }
+    }
+
+    LaunchedEffect(autoGeneratedSpots, manualSpots) {
+        if ((autoGeneratedSpots.isNotEmpty() || manualSpots.isNotEmpty()) && imageDetail != null) {
             println("Auto Generated Spots: ${autoGeneratedSpots.size}")
             imageAnalysisViewModel.plotContourOnImage(
                 imagePath = imageDetail!!.croppedImagePath,
                 contourImagePath = imageDetail!!.contourImagePath ?: "",
-                autoSpotModelList = autoGeneratedSpots
+                autoSpotModelList = autoGeneratedSpots,
+                manualSpots = manualSpots
+            )
+            imageState.value = imageState.value.copy(
+                imagePath = imageDetail!!.contourImagePath ?: "",
+                changeTrigger = !imageState.value.changeTrigger // Trigger recomposition
             )
         }
     }
 
-    val context = LocalContext.current
 
     LaunchedEffect(Unit) {
         contourDataSavedToDatabase = true
@@ -189,7 +207,7 @@ fun AnalysisScreen(
     LaunchedEffect(imageDetail, contourDataSavedToDatabase) {
         if (imageDetail != null && contourDataSavedToDatabase) {
             println("fetchAutoGeneratedSpotsFromDatabase invoked")
-            imageAnalysisViewModel.fetchAutoGeneratedSpotsFromDatabase(imageId = imageDetail!!.imageId)
+            imageAnalysisViewModel.fetchAllSpotsFromDatabase(imageId = imageDetail!!.imageId)
             contourDataSavedToDatabase = false
         }
     }
@@ -291,8 +309,222 @@ fun AnalysisScreen(
             onClearAll = {
                 showDialog = true
 
-            })
+            },
+            addSpotClick = {
+                showAddSpotDialog = true
+
+            },
+            removeOrEditSpotClick = {
+                showRemoveOrEditSpotDialog = true
+            },
+            onChangeROI = {
+
+            },
+            onIntensityPlot = onIntensityPlot
+        )
+
+        val cropImageLauncher = rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.StartActivityForResult()
+        ) { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                val data = result.data
+                val cropResult = CropImage.getActivityResult(data)
+
+                val rect: Rect? = cropResult?.cropRect
+
+                if (cropResult != null && rect != null) {
+                    val df = DecimalFormat("0.00E0")
+
+                    val manualCircularContourList = ArrayList<ManualContourResult>()
+
+                    val area = RegionOfInterest.calculateRectangleArea(rect.width(), rect.height())
+
+//                    val contourBitmap = MediaStore.Images.Media.getBitmap(
+//                        context.getContentResolver(),
+//                        cropResult.uri
+//                    );
+
+                    val contourBitmap =
+                        BitmapFactory.decodeFile(File(imageDetail!!.contourImagePath).absolutePath)
+
+
+                    val imageHeight: Int = contourBitmap!!.getHeight()
+                    val distanceFromTop: Double = (rect.top + rect.bottom) * 0.5
+
+                    val maxDistance = imageHeight.toDouble()
+                    val rfValue4: Double = 1.0 - (distanceFromTop / maxDistance)
+
+                    val cv: Double = 1 / rfValue4
+
+                    val rfValueTop: Double = rfValue4 + (rect.height() / 2) / imageHeight.toDouble()
+                    val rfValueBottom: Double =
+                        rfValue4 - (rect.height() / 2) / imageHeight.toDouble()
+                    //                double area = pixelArea;
+
+                    val x: Int = rect.left
+                    val y: Int = rect.top
+                    val w: Int = rect.width()
+                    val h: Int = rect.height()
+
+                    val solventFrontDistance: Double = w * 0.5 * (1.0 - 100.0 / 255.0)
+
+                    val contourDistance = sqrt((x * x + y * y).toDouble())
+
+                    val number: Double = area * abs(solventFrontDistance - contourDistance)
+                    println(df.format(number))
+
+                    val volume: Double = df.format(number).toDouble()
+
+
+                    manualCircularContourList.add(
+                        ManualContourResult(
+                            type = ContourType.CIRCULAR,
+                            contourData = ContourData(
+                                contourId = "",
+                                imageId = "",
+                                name = "",
+                                area = area.toString(),
+                                volume = volume.toString(),
+                                rf = rfValue4.toString(),
+                                rfTop = rfValueTop.toString(),
+                                rfBottom = rfValueBottom.toString(),
+                                cv = cv.toString(),
+                                chemicalName = "",
+                                type = ContourType.CIRCULAR
+
+                            ),
+                            rect = rect
+
+                        )
+                    )
+
+                    CoroutineScope(Dispatchers.IO).launch {
+                        imageAnalysisViewModel.saveManualContourListToDatabase(
+                            type = ContourType.CIRCULAR,
+                            imageDetail!!.imageId,
+                            manualCircularContourList
+                        )
+                        contourDataSavedToDatabase = true
+                    }
+
+
+                }
+
+                if (cropResult != null) {
+                    val croppedUri = cropResult.uri // The cropped image URI
+                    println("Cropped image URI: $croppedUri")
+                } else {
+                    println("Cropping failed or was cancelled.")
+                }
+            } else {
+                println("Cropping failed or was cancelled. result not ok")
+            }
+        }
+
+
+        if (showAddSpotDialog) {
+            AddSpotDialog(
+                onDismissRequest = { showAddSpotDialog = false },
+                onSaveClick = { isRectangle ->
+                    showAddSpotDialog = false
+                    if (isRectangle) {
+                        val intent = Intent(context, DrawRectangleCont::class.java)
+                        intent.putExtra("contourImagePath", imageDetail?.contourImagePath)
+                        context.startActivity(intent)
+                    } else {
+
+                        val cropIntent =
+                            CropImage.activity(Uri.fromFile(File(imageDetail!!.contourImagePath)))
+                                .setGuidelines(CropImageView.Guidelines.ON)
+                                .setCropShape(CropImageView.CropShape.OVAL)
+                                .setInitialRotation(90)
+                                .getIntent(context)
+                        cropImageLauncher.launch(cropIntent)
+                    }
+                }
+            )
+        }
+
+        if (showRemoveOrEditSpotDialog) {
+            RemoveEditSpotDialog(
+                contourDataList = contourDataList.value,
+                onDismissRequest = { showRemoveOrEditSpotDialog = false },
+                onEditClick = {
+
+                },
+                onDeleteClick = {
+
+                }
+            )
+        }
     }
+}
+
+@Composable
+fun RemoveEditSpotDialog(
+    contourDataList: List<ContourData>,
+    onDismissRequest: () -> Unit,
+    onEditClick: (ContourData) -> Unit,
+    onDeleteClick: (ContourData) -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = { onDismissRequest() },
+        title = {
+            Text(text = "All Spots", style = MaterialTheme.typography.headlineSmall)
+        },
+        text = {
+            LazyColumn {
+                items(contourDataList) { contourData ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // Display contour name and type
+                        Column(
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(
+                                text = contourData.name,
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                            Text(
+                                text = "Type: ${contourData.type}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+
+                        // Edit button
+                        if (contourData.type == ContourType.RECTANGULAR || contourData.type == ContourType.CIRCULAR) {
+                            IconButton(onClick = { onEditClick(contourData) }) {
+                                Icon(
+                                    imageVector = Icons.Default.Edit,
+                                    contentDescription = "Edit",
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
+
+                        // Delete button
+                        IconButton(onClick = { onDeleteClick(contourData) }) {
+                            Icon(
+                                imageVector = Icons.Default.Delete,
+                                contentDescription = "Delete",
+                                tint = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismissRequest) {
+                Text(text = "Close")
+            }
+        }
+    )
 }
 
 
@@ -325,7 +557,7 @@ fun TempAnalysisScreen(
         }
     }
 
-    TopPanel(title = "projectName",
+    TopPanel(title = "projectName ",
         onBack = { /* Handle back navigation */ },
         onSettings = { onNavigate("image_analysis_settings") },
         onCropAgain = { onNavigate("crop_screen") })

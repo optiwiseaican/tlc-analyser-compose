@@ -1,16 +1,19 @@
 package com.aican.tlcanalyzer.viewmodel.project
 
+import android.graphics.Rect
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.aican.tlcanalyzer.data.database.project.entities.ContourData
 import com.aican.tlcanalyzer.data.database.project.entities.ContourPoint
 import com.aican.tlcanalyzer.data.database.project.entities.ContourType
+import com.aican.tlcanalyzer.data.database.project.entities.ManualContourDetails
 import com.aican.tlcanalyzer.data.repository.project.ContourRepository
 import com.aican.tlcanalyzer.data.repository.project.image_analysis.ImageAnalysisRepository
 import com.aican.tlcanalyzer.domain.model.graphs.GraphPoint
 import com.aican.tlcanalyzer.domain.states.graph.IntensityDataState
 import com.aican.tlcanalyzer.domain.model.spots.AutoSpotModel
 import com.aican.tlcanalyzer.domain.model.spots.ContourResult
+import com.aican.tlcanalyzer.domain.model.spots.ManualContourResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,7 +22,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.opencv.core.MatOfPoint
 import org.opencv.core.Point
-import org.opencv.imgproc.Imgproc
 import java.io.File
 import java.util.Collections.reverse
 import javax.inject.Inject
@@ -35,10 +37,60 @@ class ImageAnalysisViewModel @Inject constructor(
     private val _isContoursFetched = MutableStateFlow(false)
     val isContoursFetched: StateFlow<Boolean> = _isContoursFetched
 
+
+    suspend fun saveManualContourListToDatabase(
+        type: ContourType,
+        imageId: String, manualContourList: List<ManualContourResult>
+    ) = withContext(Dispatchers.IO) {
+
+        try {
+
+            val contourDataSize = contourRepository.countContoursByImageId(imageId)
+            manualContourList.forEachIndexed { index, manualContour ->
+                val contourId = "C_$imageId${contourDataSize + index + 1}"
+                val rectData = manualContour.rect
+                val contourData = manualContour.contourData
+
+                contourRepository.insertContour(
+                    ContourData(
+                        imageId = imageId,
+                        contourId = contourId,
+                        name = "m" + (contourDataSize + index + 1).toString(),
+                        area = contourData.area,
+                        volume = contourData.volume,
+                        rf = contourData.rf,
+                        rfTop = contourData.rfTop,
+                        rfBottom = contourData.rfBottom,
+                        cv = contourData.cv,
+                        chemicalName = "Unknown",
+                        type = contourData.type
+                    )
+                )
+                contourRepository.insertManualContourDetails(
+                    ManualContourDetails(
+                        manualContourId = "M$contourId",
+                        contourId = contourId,
+                        roiTop = rectData.top.toFloat(),
+                        roiBottom = rectData.bottom.toFloat(),
+                        roiLeft = rectData.left.toFloat(),
+                        roiRight = rectData.right.toFloat(),
+                    )
+                )
+                println("Successfully saved ${manualContourList.size} rectangular contours.")
+
+            }
+
+
+        } catch (e: Exception) {
+            println("Error saving rect contours: ${e.message}")
+            e.printStackTrace()
+        }
+
+    }
+
     suspend fun saveAutoContourDataToDatabase(
-        imageId: String,
-        contourDataList: ArrayList<ContourResult>
-    ) {
+        imageId: String, contourDataList: ArrayList<ContourResult>
+    ) = withContext(Dispatchers.IO) {
         try {
             // Lists to hold data for batch insertion
             val newContourDataList = mutableListOf<ContourData>()
@@ -68,17 +120,15 @@ class ImageAnalysisViewModel @Inject constructor(
                 )
 
                 // Add ContourPoints
-                contourPointList.addAll(
-                    contour.toList().mapIndexed { i, point ->
-                        val contourPointId = "P_$contourId${i + 1}"
-                        ContourPoint(
-                            contourPointId = contourPointId,
-                            contourId = contourId,
-                            x = point.x.toFloat(),
-                            y = point.y.toFloat()
-                        )
-                    }
-                )
+                contourPointList.addAll(contour.toList().mapIndexed { i, point ->
+                    val contourPointId = "P_$contourId${i + 1}"
+                    ContourPoint(
+                        contourPointId = contourPointId,
+                        contourId = contourId,
+                        x = point.x.toFloat(),
+                        y = point.y.toFloat()
+                    )
+                })
             }
 
             // Batch insert all contour points and data
@@ -93,9 +143,7 @@ class ImageAnalysisViewModel @Inject constructor(
     }
 
     suspend fun saveAutoContourDataToDatabase2(
-        imageId: String,
-        contours: ArrayList<MatOfPoint>,
-        contourDataList: ArrayList<ContourData>
+        imageId: String, contours: ArrayList<MatOfPoint>, contourDataList: ArrayList<ContourData>
     ) {
         try {
             // Lists to hold data for batch insertion
@@ -113,17 +161,15 @@ class ImageAnalysisViewModel @Inject constructor(
                 }
 
                 // Create ContourPoints
-                contourPointList.addAll(
-                    contour.toList().mapIndexed { i, point ->
-                        val contourPointId = "P_$contourId${i + 1}"
-                        ContourPoint(
-                            contourPointId = contourPointId,
-                            contourId = contourId,
-                            x = point.x.toFloat(),
-                            y = point.y.toFloat()
-                        )
-                    }
-                )
+                contourPointList.addAll(contour.toList().mapIndexed { i, point ->
+                    val contourPointId = "P_$contourId${i + 1}"
+                    ContourPoint(
+                        contourPointId = contourPointId,
+                        contourId = contourId,
+                        x = point.x.toFloat(),
+                        y = point.y.toFloat()
+                    )
+                })
             }
 
             // Batch insert all contour points and data
@@ -136,22 +182,6 @@ class ImageAnalysisViewModel @Inject constructor(
         }
     }
 
-
-    // Helper function to calculate RF (Retention Factor)
-    private fun calculateRF(contour: MatOfPoint): Double {
-        // Example: Placeholder calculation for RF
-        val boundingRect = Imgproc.boundingRect(contour)
-        return boundingRect.y.toDouble() / boundingRect.height
-    }
-
-    // Helper function to calculate CV (Coefficient of Variation)
-    private fun calculateCV(contour: MatOfPoint): Double {
-        val points = contour.toList()
-        val xValues = points.map { it.x }
-        val mean = xValues.average()
-        val stdDev = kotlin.math.sqrt(xValues.map { (it - mean) * (it - mean) }.average())
-        return (stdDev / mean) * 100
-    }
 
     suspend fun generateSpots(
         imagePath: String,
@@ -196,54 +226,82 @@ class ImageAnalysisViewModel @Inject constructor(
     private val _autoGeneratedSpots = MutableStateFlow<List<AutoSpotModel>>(emptyList())
     val autoGeneratedSpots: StateFlow<List<AutoSpotModel>> = _autoGeneratedSpots
 
-    private val _allContourData = MutableStateFlow<List<ContourData>>(emptyList())
-    val allContourData: StateFlow<List<ContourData>> = _allContourData
+    private val _manualSpots = MutableStateFlow<List<ManualContourResult>>(emptyList())
+    val manualSpots: StateFlow<List<ManualContourResult>> = _manualSpots
 
-    fun fetchAutoGeneratedSpotsFromDatabase(imageId: String) {
-        viewModelScope.launch(Dispatchers.IO) { // Use Dispatchers.IO for database operations
+    private val _allAutoGeneratedSpotsData = MutableStateFlow<List<ContourData>>(emptyList())
+    val allAutoGeneratedSpotsData: StateFlow<List<ContourData>> = _allAutoGeneratedSpotsData
 
-            _autoGeneratedSpots.value = emptyList() // Clear current list before fetching new data
-            val allContours = contourRepository.getAllContoursByImageId(imageId = imageId)
 
-            println("Contour length from database in viewmodel : ${allContours.size}")
-            _allContourData.value = allContours
+    suspend fun fetchAllSpotsFromDatabase(imageId: String) = withContext(Dispatchers.IO) {
 
-            // Filter for AUTO contours first
-            val filteredContours = allContours.filter { it.type == ContourType.AUTO }
+        _autoGeneratedSpots.value = emptyList() // Clear current list before fetching new data
+        _manualSpots.value = emptyList() // Clear current list before fetching new data
 
-            // Map filtered contours to AutoSpotModel
-            val autoSpotList = filteredContours.map { contour ->
-                val contourPoints =
-                    contourRepository.getAllContourPointsByContourId(contour.contourId)
-                val contourMatOfPoint = MatOfPoint().apply {
-                    fromList(contourPoints.map { point ->
-                        Point(point.x.toDouble(), point.y.toDouble())
-                    })
-                }
+        val allContours = contourRepository.getAllContoursByImageId(imageId = imageId)
 
-                AutoSpotModel(
-                    imageId = contour.imageId,
-                    contourId = contour.contourId,
-                    name = contour.name,
-                    matOfPoint = contourMatOfPoint
+        println("Contour length from database in viewmodel : ${allContours.size}")
+        _allAutoGeneratedSpotsData.value = allContours
+
+        // Filter for AUTO contours first
+        val filteredAutoContours = allContours.filter { it.type == ContourType.AUTO }
+        val filteredManualContours =
+            allContours.filter { it.type == ContourType.RECTANGULAR || it.type == ContourType.CIRCULAR }
+
+        val manualContourList = ArrayList<ManualContourResult>()
+
+        filteredManualContours.forEach { contour ->
+
+            val manualContourDetails =
+                contourRepository.getManualDetailsByContourId(contour.contourId)
+
+            manualContourList.add(
+                ManualContourResult(
+                    type = contour.type,
+                    contourData = contour,
+                    rect = Rect(
+                        manualContourDetails?.roiLeft?.toInt() ?: 0,
+                        manualContourDetails?.roiTop?.toInt() ?: 0,
+                        manualContourDetails?.roiRight?.toInt() ?: 0,
+                        manualContourDetails?.roiBottom?.toInt() ?: 0
+                    )
                 )
+            )
+
+
+        }
+
+        // Map filtered contours to AutoSpotModel
+        val autoSpotList = filteredAutoContours.map { contour ->
+            val contourPoints = contourRepository.getAllContourPointsByContourId(contour.contourId)
+            val contourMatOfPoint = MatOfPoint().apply {
+                fromList(contourPoints.map { point ->
+                    Point(point.x.toDouble(), point.y.toDouble())
+                })
             }
 
-            // Update the StateFlow with the new list
-            _autoGeneratedSpots.value = autoSpotList
+            AutoSpotModel(
+                imageId = contour.imageId,
+                contourId = contour.contourId,
+                name = contour.name,
+                matOfPoint = contourMatOfPoint
+            )
         }
+
+        _manualSpots.value = manualContourList
+        // Update the StateFlow with the new list
+        _autoGeneratedSpots.value = autoSpotList
     }
 
     fun plotContourOnImage(
         imagePath: String,
         contourImagePath: String,
-        autoSpotModelList: List<AutoSpotModel>
+        autoSpotModelList: List<AutoSpotModel>,
+        manualSpots: List<ManualContourResult>
     ) {
         viewModelScope.launch {
             imageAnalysisRepository.plotContourOnImage(
-                imagePath,
-                contourImagePath,
-                autoSpotModelList
+                imagePath, contourImagePath, autoSpotModelList, manualSpots
             )
         }
     }

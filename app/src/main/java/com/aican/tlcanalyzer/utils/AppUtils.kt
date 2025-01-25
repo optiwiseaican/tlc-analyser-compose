@@ -7,6 +7,9 @@ import java.util.Locale
 import kotlin.math.absoluteValue
 
 object AppUtils {
+
+    var retake = false
+
     const val APP_NAME = "TLC Analyser"
     val UiColor1 = Color.Black
 

@@ -59,4 +59,7 @@ interface ContourDataDao {
 
     @Update
     suspend fun updateContourById(contour: ContourData)
+
+    @Query("SELECT COUNT(*) FROM ContourData WHERE imageId = :imageId")
+    suspend fun countContoursByImageId(imageId: String): Int
 }

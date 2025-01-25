@@ -40,9 +40,9 @@ fun TopPanel(
             style = MaterialTheme.typography.bodyMedium,
             modifier = Modifier.weight(1f)
         )
-        Button(onClick = { /* Handle Save */ }) {
-            Text(text = "Save")
-        }
+//        Button(onClick = { /* Handle Save */ }) {
+//            Text(text = "Save")
+//        }
         IconButton(onClick = { onSettings.invoke() }) {
             Icon(Icons.Default.Settings, contentDescription = "Settings")
         }

@@ -36,4 +36,8 @@ sealed class ImageAnalysisRoute {
     @Serializable
     data object ROUTE_CROP_SETTINGS : ImageAnalysisRoute()
 
+
+    @Serializable
+    data object ROUTE_INTENSITY_PLOT : ImageAnalysisRoute()
+
 }

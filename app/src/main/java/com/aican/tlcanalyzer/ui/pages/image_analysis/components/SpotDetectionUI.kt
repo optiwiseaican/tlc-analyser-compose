@@ -21,7 +21,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
-fun SpotDetectionUI(thresholdVal: Int, numberOfSpots: Int, onGenerateSpots: (Int, Int) -> Unit) {
+fun SpotDetectionUI(
+    thresholdVal: Int,
+    numberOfSpots: Int,
+    onGenerateSpots: (Int, Int) -> Unit,
+    addSpotClick: () -> Unit,
+
+) {
     var currentThreshold by remember { mutableIntStateOf(thresholdVal) }
 
     var currentNumberOfSpots by remember {
@@ -68,7 +74,7 @@ fun SpotDetectionUI(thresholdVal: Int, numberOfSpots: Int, onGenerateSpots: (Int
         ) {
             ActionButton(text = "Generate Spots",
                 onClick = { onGenerateSpots(currentThreshold, currentNumberOfSpots) })
-            ActionButton(text = "Add Spot", onClick = { /* Handle Add Spot */ })
+            ActionButton(text = "Add Spot", onClick = addSpotClick)
         };
     }
 }

@@ -2,11 +2,16 @@ package com.aican.tlcanalyzer.analysis
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
 import com.aican.tlcanalyzer.data.database.project.entities.ContourData
 import com.aican.tlcanalyzer.data.database.project.entities.ContourType
 import com.aican.tlcanalyzer.domain.model.spots.AutoSpotModel
 import com.aican.tlcanalyzer.domain.model.spots.ContourResult
+import com.aican.tlcanalyzer.domain.model.spots.ManualContourResult
 import com.aican.tlcanalyzer.utils.AppUtils.format
+import com.aican.tlcanalyzer.utils.RegionOfInterest
 import org.opencv.android.Utils
 import org.opencv.core.Mat
 import org.opencv.core.MatOfPoint
@@ -249,21 +254,13 @@ class OpenCVOperations @Inject constructor() {
     suspend fun plotContourOnImage(
         imagePath: String,
         contourImagePath: String,
-        autoSpotModelList: List<AutoSpotModel>
+        autoSpotModelList: List<AutoSpotModel>,
+        manualSpots: List<ManualContourResult>
     ) {
-
         println("From opencv plotContourOnImage: ${autoSpotModelList.size}")
         val outFile = File(imagePath)
 
         if (outFile.exists()) {
-            // If the list is empty, simply copy the image to contourImagePath
-            if (autoSpotModelList.isEmpty()) {
-                println("AutoSpotModel list is empty, copying original image to contour image path.")
-                val outputFile = File(contourImagePath)
-                outFile.copyTo(outputFile, overwrite = true)
-                return // Exit the function after copying the image
-            }
-
             val contours = ArrayList<MatOfPoint>()
             val contourNames = mutableListOf<String>()
 
@@ -314,12 +311,44 @@ class OpenCVOperations @Inject constructor() {
             }
 
             // Convert the Mat with contours and text back to Bitmap
-            val outputBitmap = Bitmap.createBitmap(
+            var outputBitmap = Bitmap.createBitmap(
                 contourMat.cols(),
                 contourMat.rows(),
                 Bitmap.Config.ARGB_8888
             )
             Utils.matToBitmap(contourMat, outputBitmap)
+
+            // Draw manual spots (rectangular or circular)
+            manualSpots.forEach { spot ->
+                if (spot.type == ContourType.RECTANGULAR) {
+                    outputBitmap = RegionOfInterest.drawRectWithROI(
+                        outputBitmap,
+                        spot.rect.left,
+                        spot.rect.top,
+                        spot.rect.width(),
+                        spot.rect.height()
+                    )
+                } else if (spot.type == ContourType.CIRCULAR) {
+                    outputBitmap = RegionOfInterest.drawOvalWithROI(
+                        outputBitmap,
+                        spot.rect.left,
+                        spot.rect.top,
+                        spot.rect.width(),
+                        spot.rect.height()
+                    )
+                }
+
+                val x: Int = spot.rect.left
+                val y: Int = spot.rect.top
+
+                val paint = Paint()
+                paint.color = Color.RED
+                paint.textSize = 30f
+                paint.style = Paint.Style.FILL
+
+                val canvas = Canvas(outputBitmap)
+                canvas.drawText(spot.contourData.name, x.toFloat(), y.toFloat(), paint)
+            }
 
             // Save the output Bitmap to the specified path
             val outputFile = File(contourImagePath)

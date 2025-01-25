@@ -5,6 +5,7 @@ import com.aican.tlcanalyzer.analysis.OpenCVOperations
 import com.aican.tlcanalyzer.data.database.project.entities.ContourData
 import com.aican.tlcanalyzer.domain.model.spots.AutoSpotModel
 import com.aican.tlcanalyzer.domain.model.spots.ContourResult
+import com.aican.tlcanalyzer.domain.model.spots.ManualContourResult
 import org.opencv.core.MatOfPoint
 import javax.inject.Inject
 
@@ -33,8 +34,14 @@ class ImageAnalysisRepository @Inject constructor(
     suspend fun plotContourOnImage(
         imagePath: String,
         contourImagePath: String,
-        autoSpotModelList: List<AutoSpotModel>
+        autoSpotModelList: List<AutoSpotModel>,
+        manualSpots: List<ManualContourResult>
     ) =
-        openCVOperations.plotContourOnImage(imagePath, contourImagePath, autoSpotModelList)
+        openCVOperations.plotContourOnImage(
+            imagePath,
+            contourImagePath,
+            autoSpotModelList,
+            manualSpots
+        )
 
 }

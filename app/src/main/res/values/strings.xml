@@ -16,4 +16,18 @@
     <string name="if_you_changes">Note: If you changed this value, then you must be plot the intensity graph again, otherwise it will give you the incorrect values and graph</string>
     <string name="tip_just_tap_on_image_from_where_you_want_to_crop">Tip : Just tap on image to add split lines.</string>
 
+
+    <string name="crop_image_activity_title"></string>
+    <string name="crop_image_menu_rotate_left">Rotate counter clockwise</string>
+    <string name="crop_image_menu_rotate_right">Rotate</string>
+    <string name="crop_image_menu_crop">Crop</string>
+    <string name="crop_image_menu_flip">Flip</string>
+    <string name="crop_image_menu_flip_horizontally">Flip horizontally</string>
+    <string name="crop_image_menu_flip_vertically">Flip vertically</string>
+
+    <string name="pick_image_intent_chooser_title">Select source</string>
+
+    <string name="crop_image_activity_no_permissions">Cancelling, required permissions are not granted</string>
+
+
 </resources>

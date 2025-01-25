@@ -119,4 +119,7 @@ class ContourRepository @Inject constructor(
         contourDataDao.insertContours(contourDataList)
         contourPointDao.insertContourPoints(contourPointList)
     }
+
+    suspend fun countContoursByImageId(imageId: String): Int =
+        contourDataDao.getContoursCountByImageId(imageId)
 }
