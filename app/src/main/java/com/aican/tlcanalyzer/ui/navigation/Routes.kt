@@ -40,4 +40,13 @@ sealed class ImageAnalysisRoute {
     @Serializable
     data object ROUTE_INTENSITY_PLOT : ImageAnalysisRoute()
 
+    @Serializable
+    data object ROUTE_VOLUME_PLOT : ImageAnalysisRoute()
+
+    @Serializable
+    data object ROUTE_TABLE_PLOT : ImageAnalysisRoute()
+
+    @Serializable
+    data object ROUTE_REPORT : ImageAnalysisRoute()
+
 }

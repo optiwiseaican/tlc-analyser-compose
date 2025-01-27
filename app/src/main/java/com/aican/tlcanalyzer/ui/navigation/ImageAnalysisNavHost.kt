@@ -2,14 +2,15 @@ package com.aican.tlcanalyzer.ui.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.aican.tlcanalyzer.ui.pages.image_analysis.AnalysisScreen
-import com.aican.tlcanalyzer.ui.pages.image_analysis.TempAnalysisScreen
-import com.aican.tlcanalyzer.ui.pages.image_analysis.intensity_plot.IntensityPlotScreen
+import com.aican.tlcanalyzer.ui.pages.image_analysis.report_section.IntensityPlotScreen
+import com.aican.tlcanalyzer.ui.pages.image_analysis.report_section.PlotTableScreen
+import com.aican.tlcanalyzer.ui.pages.image_analysis.report_section.ReportScreen
+import com.aican.tlcanalyzer.ui.pages.image_analysis.report_section.VolumePlotScreen
 import com.aican.tlcanalyzer.ui.pages.settings_pages.CropScreen
 import com.aican.tlcanalyzer.ui.pages.settings_pages.ProjectSettingsScreen
 import com.aican.tlcanalyzer.viewmodel.project.ImageAnalysisViewModel
@@ -58,8 +59,27 @@ fun ImageAnalysisNavHost(
                         navController.navigate(ImageAnalysisRoute.ROUTE_CROP_SETTINGS)
 
                     }
-                    if (routeDestination == "IntensityPlotScreen"){
+                    if (routeDestination == "IntensityPlotScreen") {
                         navController.navigate(ImageAnalysisRoute.ROUTE_INTENSITY_PLOT) {
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    }
+
+                    if (routeDestination == "VolumePlotScreen") {
+                        navController.navigate(ImageAnalysisRoute.ROUTE_VOLUME_PLOT) {
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    }
+                    if (routeDestination == "PlotTableScreen") {
+                        navController.navigate(ImageAnalysisRoute.ROUTE_TABLE_PLOT) {
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    }
+                    if (routeDestination == "ReportScreen") {
+                        navController.navigate(ImageAnalysisRoute.ROUTE_REPORT) {
                             launchSingleTop = true
                             restoreState = true
                         }
@@ -82,6 +102,29 @@ fun ImageAnalysisNavHost(
                 intensityChartViewModel = intensityChartViewModel,
                 projectViewModel = projectViewModel
             )
+        }
+
+
+        composable<ImageAnalysisRoute.ROUTE_VOLUME_PLOT> {
+            VolumePlotScreen(
+                imageAnalysisViewModel = imageAnalysisViewModel,
+            )
+        }
+
+
+        composable<ImageAnalysisRoute.ROUTE_TABLE_PLOT> {
+            PlotTableScreen(
+                imageAnalysisViewModel = imageAnalysisViewModel,
+            )
+        }
+
+
+
+        composable<ImageAnalysisRoute.ROUTE_REPORT> {
+            ReportScreen(
+            ) {
+
+            }
         }
 
 

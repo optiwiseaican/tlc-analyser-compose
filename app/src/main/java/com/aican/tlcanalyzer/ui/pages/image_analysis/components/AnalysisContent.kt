@@ -168,8 +168,8 @@ fun AnalyserLayout(
     onIntensityPlot: () -> Unit,
 ) {
 
-    var isChartVisible by rememberSaveable { mutableStateOf(isChartVisibleR) }
-    var isTableVisible by rememberSaveable { mutableStateOf(isTableVisibleR) }
+    val isChartVisible by rememberSaveable { mutableStateOf(isChartVisibleR) }
+    val isTableVisible by rememberSaveable { mutableStateOf(isTableVisibleR) }
 
 
     LazyColumn(modifier = Modifier.fillMaxSize()) {

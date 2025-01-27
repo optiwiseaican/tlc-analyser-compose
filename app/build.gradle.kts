@@ -125,6 +125,7 @@ dependencies {
     implementation("com.patrykandpatrick.vico:compose:1.16.0")
     implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
 
+    implementation("com.github.barteksc:AndroidPdfViewer:2.0.2")
 
 
 }

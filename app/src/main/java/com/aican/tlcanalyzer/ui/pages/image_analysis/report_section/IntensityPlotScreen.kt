@@ -1,21 +1,23 @@
-package com.aican.tlcanalyzer.ui.pages.image_analysis.intensity_plot
+package com.aican.tlcanalyzer.ui.pages.image_analysis.report_section
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import com.aican.tlcanalyzer.data.database.project.entities.ContourData
-import com.aican.tlcanalyzer.domain.states.graph.IntensityDataState
+import androidx.compose.ui.unit.dp
 import com.aican.tlcanalyzer.ui.components.topbar_navigation.CustomTopBar
 import com.aican.tlcanalyzer.ui.pages.image_analysis.components.IntensityDataSection
+import com.aican.tlcanalyzer.ui.pages.image_analysis.components.TableScreen
 import com.aican.tlcanalyzer.viewmodel.project.ImageAnalysisViewModel
 import com.aican.tlcanalyzer.viewmodel.project.IntensityChartViewModel
 import com.aican.tlcanalyzer.viewmodel.project.ProjectViewModel
-import com.github.mikephil.charting.data.Entry
 
 @Composable
 fun IntensityPlotScreen(
@@ -38,14 +40,27 @@ fun IntensityPlotScreen(
             )
         },
     ) { internalPadding ->
-        Column(modifier = Modifier.fillMaxSize().padding(internalPadding)) {
+
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(internalPadding)
+        ) {
+            item {
+                Spacer(modifier = Modifier.height(18.dp))
+                IntensityDataSection(
+                    parts = numberOfIntensityParts ?: 100,
+                    intensityDataState = intensityDataState, lineChartData = lineChartData,
+                    contourDataList = contourDataList
+                )
+            }
+            item {
+                Spacer(modifier = Modifier.height(8.dp))
+
+                TableScreen(contourDataList)
+            }
 
 
-            IntensityDataSection(
-                parts = numberOfIntensityParts ?: 100,
-                intensityDataState = intensityDataState, lineChartData = lineChartData,
-                contourDataList = contourDataList
-            )
         }
     }
 
