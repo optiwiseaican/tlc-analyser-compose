@@ -1,6 +1,7 @@
 package com.aican.tlcanalyzer.data.database.project.dao
 
 import androidx.room.*
+import com.aican.tlcanalyzer.data.database.project.entities.Image
 import com.aican.tlcanalyzer.data.database.project.entities.ProjectDetails
 import com.aican.tlcanalyzer.data.database.project.relation.ProjectWithImages
 import kotlinx.coroutines.flow.Flow
@@ -67,5 +68,14 @@ interface ProjectDetailsDao {
     // Update the number of RF counts for a specific project
     @Query("UPDATE ProjectDetails SET noOfRfCounts = :rfCounts WHERE projectId = :projectId")
     suspend fun updateNumberOfRfCountsByProjectId(projectId: String, rfCounts: Int)
+
+    @Query("SELECT imageSplitAvailable FROM ProjectDetails WHERE projectId = :projectId")
+    suspend fun getProjectType(projectId: String): Boolean
+
+    @Query("SELECT * FROM Image WHERE projectId = :projectId AND imageType = 'MAIN'")
+    suspend fun getAllMainImagesByProjectId(projectId: String): List<Image>
+
+    @Query("SELECT * FROM Image WHERE projectId = :projectId AND imageType = 'SPLIT'")
+    suspend fun getAllSplitImageByProjectId(projectId: String): List<Image>
 
 }

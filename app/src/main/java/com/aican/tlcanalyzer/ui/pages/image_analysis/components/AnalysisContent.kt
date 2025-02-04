@@ -38,7 +38,6 @@ fun AnalysisContent(
     parts: Int,
     projectName: String,
     imagePath: String,
-    imageDetails: List<Image>,
     imageState: ImageState,
     image: Image,
     intensityDataState: IntensityDataState,
@@ -107,7 +106,6 @@ fun AnalysisContent(
                             parts = parts,
                             projectName = projectName,
                             imagePath = imagePath,
-                            imageDetails = imageDetails,
                             imageState = imageState,
                             image = image,
                             intensityDataState = intensityDataState,
@@ -149,7 +147,6 @@ fun AnalyserLayout(
     parts: Int,
     projectName: String,
     imagePath: String,
-    imageDetails: List<Image>,
     imageState: ImageState,
     image: Image,
     intensityDataState: IntensityDataState,
@@ -248,7 +245,9 @@ fun AnalyserLayout(
                     parts = parts,
                     intensityDataState = intensityDataState, lineChartData = lineChartData,
                     contourDataList = contourDataList
-                )
+                ){
+
+                }
             }
         }
 

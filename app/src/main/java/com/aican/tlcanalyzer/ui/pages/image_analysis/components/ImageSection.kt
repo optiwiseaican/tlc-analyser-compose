@@ -19,7 +19,7 @@ import java.io.File
 
 
 @Composable
-fun ImageSection(imageState: ImageState) {
+fun ImageSection(imageState: ImageState, zoomable: Boolean = false) {
     LaunchedEffect(imageState.changeTrigger) {
         println("ImageSection recomposed with path: ${imageState.imagePath}")
     }
@@ -35,7 +35,8 @@ fun ImageSection(imageState: ImageState) {
                 ZoomableImage(
                     imagePath = imageState.imagePath,
                     description = imageState.description,
-                    recomposeKey = imageState.changeTrigger.hashCode() // Use trigger to recompose
+                    recomposeKey = imageState.changeTrigger.hashCode(), // Use trigger to recompose
+                    zoomable = zoomable
                 )
             }
         } else {
@@ -91,7 +92,8 @@ fun ImageSection(image: Image) {
                 println("image section recomposed with trigger: ${recomposeTrigger.intValue}")
                 ZoomableImage(
                     imagePath = imagePath, // Use the valid imagePath
-                    description = "Main Image", recomposeKey = recomposeTrigger.intValue
+                    description = "Main Image", recomposeKey = recomposeTrigger.intValue,
+                    zoomable = false
                 )
             }
         } else {

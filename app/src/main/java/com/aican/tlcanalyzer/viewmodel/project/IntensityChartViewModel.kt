@@ -21,4 +21,9 @@ class IntensityChartViewModel @Inject constructor() : ViewModel() {
         _lineChartDataList.value = entries // Update the state
     }
 
+    fun clearAllData() {
+        println("🧹 Clearing selected image in ViewModel")
+        _lineChartDataList.value = emptyList()
+    }
+
 }

@@ -1,6 +1,7 @@
 package com.aican.tlcanalyzer.data.repository.project
 
 import com.aican.tlcanalyzer.data.database.project.dao.ProjectDetailsDao
+import com.aican.tlcanalyzer.data.database.project.entities.Image
 import com.aican.tlcanalyzer.data.database.project.entities.ProjectDetails
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -15,6 +16,9 @@ class ProjectRepository @Inject constructor(private val projectDetailsDao: Proje
 
     // Fetch all projects one-time
     suspend fun getAllProjects(): List<ProjectDetails> = projectDetailsDao.getAllProjects()
+
+    suspend fun getProjectType(projectId: String): Boolean =
+        projectDetailsDao.getProjectType(projectId)
 
     // Observe a single project by ID as Flow
     fun observeProjectById(projectId: String): Flow<ProjectDetails?> =
@@ -54,4 +58,11 @@ class ProjectRepository @Inject constructor(private val projectDetailsDao: Proje
 
     suspend fun updateNumberOfRfCountsByProjectId(projectId: String, rfCounts: Int) =
         projectDetailsDao.updateNumberOfRfCountsByProjectId(projectId, rfCounts)
+
+    suspend fun getAllMainImagesByProjectId(projectId: String): List<Image> =
+        projectDetailsDao.getAllMainImagesByProjectId(projectId)
+
+
+    suspend fun getAllSplitImageByProjectId(projectId: String): List<Image> =
+        projectDetailsDao.getAllSplitImageByProjectId(projectId)
 }

@@ -126,6 +126,7 @@ dependencies {
     implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
 
     implementation("com.github.barteksc:AndroidPdfViewer:2.0.2")
+    implementation("com.itextpdf:itext7-core:7.1.16")
 
 
 }

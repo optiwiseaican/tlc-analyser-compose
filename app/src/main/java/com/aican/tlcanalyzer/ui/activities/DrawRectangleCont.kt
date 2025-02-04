@@ -10,6 +10,7 @@ import android.view.MotionEvent
 import android.view.View
 import android.widget.SeekBar
 import android.widget.Toast
+import androidx.activity.ComponentActivity
 import androidx.appcompat.app.AppCompatActivity
 import com.aican.tlcanalyzer.data.database.project.entities.ContourData
 import com.aican.tlcanalyzer.data.database.project.entities.ContourType
@@ -32,7 +33,7 @@ import kotlin.math.roundToInt
 import kotlin.math.sqrt
 
 
-class DrawRectangleCont : AppCompatActivity() {
+class DrawRectangleCont : ComponentActivity() {
     lateinit var binding: ActivityDrawRectangleContBinding
     private var rgba: Lazy<Mat> = lazy { Mat() }
     private lateinit var originalImage: Mat
@@ -58,7 +59,7 @@ class DrawRectangleCont : AppCompatActivity() {
             layoutInflater
         )
         setContentView(binding.root)
-        supportActionBar?.hide()
+//        supportActionBar?.hide()
 
         binding.back.setOnClickListener {
             finish()

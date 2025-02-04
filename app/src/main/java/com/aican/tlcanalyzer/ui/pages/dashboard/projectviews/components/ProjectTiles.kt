@@ -40,6 +40,7 @@ import com.aican.tlcanalyzer.R
 import com.aican.tlcanalyzer.data.database.project.entities.ProjectDetails
 import com.aican.tlcanalyzer.ui.activities.NewCameraActivity
 import com.aican.tlcanalyzer.ui.activities.NewImageAnalysis
+import com.aican.tlcanalyzer.ui.activities.SplitImageActivity
 import com.aican.tlcanalyzer.utils.AppUtils
 import java.io.File
 
@@ -72,10 +73,17 @@ fun ProjectTiles(modifier: Modifier = Modifier, project: ProjectDetails) {
             .padding(start = 15.dp, end = 15.dp)
             .fillMaxWidth()
             .clickable {
-                val intent = Intent(context, NewImageAnalysis::class.java).apply {
-                    putExtra("projectId", project.projectId)
+                if (project.imageSplitAvailable) {
+                    val intent = Intent(context, SplitImageActivity::class.java).apply {
+                        putExtra("projectId", project.projectId)
+                    }
+                    context.startActivity(intent)
+                } else {
+                    val intent = Intent(context, NewImageAnalysis::class.java).apply {
+                        putExtra("projectId", project.projectId)
+                    }
+                    context.startActivity(intent)
                 }
-                context.startActivity(intent)
             }
     ) {
 

@@ -52,7 +52,9 @@ fun IntensityPlotScreen(
                     parts = numberOfIntensityParts ?: 100,
                     intensityDataState = intensityDataState, lineChartData = lineChartData,
                     contourDataList = contourDataList
-                )
+                ){
+
+                }
             }
             item {
                 Spacer(modifier = Modifier.height(8.dp))

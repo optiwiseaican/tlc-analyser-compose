@@ -10,11 +10,18 @@ object SharedStates {
 
 
     // for manual rectangle contour
-    private val _manualRectContourListState = MutableStateFlow<List<ManualContourResult>>(emptyList())
-    val manualRectContourListState: StateFlow<List<ManualContourResult>> = _manualRectContourListState
+    private val _manualRectContourListState =
+        MutableStateFlow<List<ManualContourResult>>(emptyList())
+    val manualRectContourListState: StateFlow<List<ManualContourResult>> =
+        _manualRectContourListState
 
     fun updateManualRectContourList(newList: List<ManualContourResult>) {
         _manualRectContourListState.value = newList
+    }
+
+    fun clearManualRectContourList() {
+        _manualRectContourListState.value = emptyList()
+
     }
 
 

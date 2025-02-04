@@ -2,6 +2,7 @@ package com.aican.tlcanalyzer.ui.activities
 
 import android.content.Context
 import android.content.ContextWrapper
+import android.content.Intent
 import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Bundle
@@ -24,6 +25,7 @@ import com.aican.tlcanalyzer.data.database.project.entities.ImageType
 import com.aican.tlcanalyzer.data.database.project.entities.ProjectDetails
 import com.aican.tlcanalyzer.databinding.ActivityCapturedImagePreviewBinding
 import com.aican.tlcanalyzer.utils.AppUtils
+import com.aican.tlcanalyzer.utils.ImageCache
 import com.aican.tlcanalyzer.viewmodel.project.ProjectViewModel
 import com.google.firebase.installations.Utils
 import dagger.hilt.android.AndroidEntryPoint
@@ -91,11 +93,11 @@ class CapturedImagePreview : AppCompatActivity() {
             }
 
             val savedMainImagePath =
-                saveImageToFile(this, mainImageBitmap, "main_image.jpg", projectFolder)
+                AppUtils.saveImageToFile(this, mainImageBitmap, "main_image.jpg", projectFolder)
             val saveCroppedImagePath =
-                saveImageToFile(this, croppedBitmap, "cropped_image.jpg", projectFolder)
+                AppUtils.saveImageToFile(this, croppedBitmap, "cropped_image.jpg", projectFolder)
             val saveContourImagePath =
-                saveImageToFile(this, croppedBitmap, "contour_image.jpg", projectFolder)
+                AppUtils.saveImageToFile(this, croppedBitmap, "contour_image.jpg", projectFolder)
 
             if (savedMainImagePath == null || saveCroppedImagePath == null || saveContourImagePath == null) {
                 Toast.makeText(this, "Error saving images", Toast.LENGTH_SHORT).show()
@@ -141,46 +143,23 @@ class CapturedImagePreview : AppCompatActivity() {
             ).show()
         }
 
-    }
+        binding.splitBtn.setOnClickListener {
+            val croppedBitmap = binding.ivCrop.crop()
+            if (croppedBitmap != null) {
+                ImageCache.setBitmap(croppedBitmap)
+                val intwnt = Intent(
+                    this@CapturedImagePreview, SplitCropping::class.java
+                )
 
-    private fun saveImageToFile(
-        context: Context,
-        bitmap: Bitmap,
-        fileName: String,
-        folderName: String
-    ): String? {
-        var outStream: FileOutputStream? = null
-        return try {
-            // Create directory path
-            val dir = File(
-                folderName
-            )
+                intwnt.putExtra("projectName", projectName)
+                intwnt.putExtra("projectDescription", projectDescription)
 
-            if (!dir.exists()) {
-                dir.mkdirs() // Create directories if they don't exist
+
+                startActivity(intwnt)
+
             }
-
-            // File to save the image
-            val outFile = File(dir, fileName)
-            outStream = FileOutputStream(outFile)
-
-            // Compress and write bitmap to file
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outStream)
-            outStream.flush()
-            outStream.close()
-
-            // Log success and return file path
-            Log.d("TAG", "Image saved at: ${outFile.absolutePath}")
-            outFile.absolutePath // Return the absolute path of the saved file
-        } catch (e: FileNotFoundException) {
-            e.printStackTrace()
-            null
-        } catch (e: IOException) {
-            e.printStackTrace()
-            null
-        } finally {
-            outStream?.close()
         }
+
     }
 
 

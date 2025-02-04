@@ -50,3 +50,9 @@ sealed class ImageAnalysisRoute {
     data object ROUTE_REPORT : ImageAnalysisRoute()
 
 }
+
+sealed class SplitImageRoute{
+    @Serializable
+    data object ROUTE_SPLIT_IMAGE : SplitImageRoute()
+
+}

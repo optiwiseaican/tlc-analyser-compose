@@ -8,18 +8,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import com.aican.tlcanalyzer.data.repository.project.ContourRepository
 import com.aican.tlcanalyzer.ui.navigation.AppNavHost
-import com.aican.tlcanalyzer.ui.theme.TLCAnalyzerTheme
+import com.aican.tlcanalyzer.utils.AppUtils
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import javax.inject.Inject
+import java.io.File
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -35,7 +28,11 @@ class MainActivity : ComponentActivity() {
 //            contourRepository.nukeContourDataTable()
 //            contourRepository.nukeContourPointsTable()
 //        }
+        val exportDir = File(getExternalFilesDir(null).toString() + "/" + "All PDF Files")
 
+        if (!exportDir.exists()) {
+            exportDir.mkdirs()
+        }
         setContent {
             Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                 Box(modifier = Modifier.padding(innerPadding)) {
@@ -44,5 +41,10 @@ class MainActivity : ComponentActivity() {
             }
 
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        AppUtils.MAIN_IMAGE_COUNT = 0
     }
 }

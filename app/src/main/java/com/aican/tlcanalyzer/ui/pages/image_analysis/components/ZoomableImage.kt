@@ -51,7 +51,8 @@ fun ZoomableImage(
     imagePath: String,
     description: String,
     recomposeKey: Int, // Pass a unique key to force recomposition
-    visibility: Boolean = true
+    visibility: Boolean = true,
+    zoomable: Boolean
 ) {
     if (visibility) {
         val scale = rememberSaveable { mutableFloatStateOf(1f) }
@@ -66,73 +67,136 @@ fun ZoomableImage(
             isImageReady = true // Set true after the delay
         }
 
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-        ) {
-            Box(modifier = Modifier
-                .height(500.dp)
-                .clip(RectangleShape)
-                .pointerInput(Unit) {
-                    detectTransformGestures { _, _, zoom, rotation ->
-                        scale.floatValue = maxOf(0.5f, minOf(3f, scale.floatValue * zoom))
-                        rotationState.floatValue += rotation
-                    }
-                }) {
-                if (isImageReady) {
-                    val imageFile = File(imagePath)
-                    val uniqueImagePath = "$imagePath?timestamp=${System.currentTimeMillis()}"
-                    val bitmap = BitmapFactory.decodeFile(imageFile.path)
+        if (zoomable) {
 
-                    if (bitmap != null) {
-                        println("Bitmap is not null for path: $uniqueImagePath")
-                    }
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+            ) {
+                Box(modifier = Modifier
+                    .height(500.dp)
+                    .clip(RectangleShape)
+                    .pointerInput(Unit) {
+                        detectTransformGestures { _, _, zoom, rotation ->
+                            scale.floatValue = maxOf(0.5f, minOf(3f, scale.floatValue * zoom))
+                            rotationState.floatValue += rotation
+                        }
+                    }) {
+                    if (isImageReady) {
+                        val imageFile = File(imagePath)
+                        val uniqueImagePath = "$imagePath?timestamp=${System.currentTimeMillis()}"
+                        val bitmap = BitmapFactory.decodeFile(imageFile.path)
 
-                    if (imageFile.exists()) {
-                        println("ZoomableImage recomposed with recomposeKey: $recomposeKey")
-                        AsyncImage(
-                            model = ImageRequest.Builder(LocalContext.current)
-                                .data(uniqueImagePath.toUri()) // Use a unique key to bypass cache
-                                .memoryCacheKey(uniqueImagePath) // Optional custom cache key
-                                .diskCachePolicy(CachePolicy.DISABLED) // Disable disk cache
-                                .memoryCachePolicy(CachePolicy.DISABLED) // Disable memory cache
-                                .build(),
-                            contentDescription = description,
+                        if (bitmap != null) {
+                            println("Bitmap is not null for path: $uniqueImagePath")
+                        }
+
+                        if (imageFile.exists()) {
+                            println("ZoomableImage recomposed with recomposeKey: $recomposeKey")
+                            AsyncImage(
+                                model = ImageRequest.Builder(LocalContext.current)
+                                    .data(uniqueImagePath.toUri()) // Use a unique key to bypass cache
+                                    .memoryCacheKey(uniqueImagePath) // Optional custom cache key
+                                    .diskCachePolicy(CachePolicy.DISABLED) // Disable disk cache
+                                    .memoryCachePolicy(CachePolicy.DISABLED) // Disable memory cache
+                                    .build(),
+                                contentDescription = description,
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .graphicsLayer(
+                                        scaleX = scale.floatValue,
+                                        scaleY = scale.floatValue,
+                                        rotationZ = rotationState.floatValue,
+                                        transformOrigin = TransformOrigin.Center
+                                    )
+                            )
+                        } else {
+                            println("Image file does not exist: $imagePath")
+                            Image(
+                                modifier = Modifier.fillMaxSize(),
+                                painter = painterResource(id = R.drawable.baseline_warning_24),
+                                contentDescription = "Image Not Found"
+                            )
+                        }
+                    }
+                    else {
+                        // Placeholder while the image is being delayed
+                        Box(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .graphicsLayer(
-                                    scaleX = scale.floatValue,
-                                    scaleY = scale.floatValue,
-                                    rotationZ = rotationState.floatValue,
-                                    transformOrigin = TransformOrigin.Center
-                                )
-                        )
-                    } else {
-                        println("Image file does not exist: $imagePath")
-                        Image(
-                            modifier = Modifier.fillMaxSize(),
-                            painter = painterResource(id = R.drawable.baseline_warning_24),
-                            contentDescription = "Image Not Found"
-                        )
+                                .background(Color.White),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator()
+                        }
                     }
-                } else {
-                    // Placeholder while the image is being delayed
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(Color.White),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator()
+                }
+            }
+        }
+        else{
+
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+            ) {
+                Box(modifier = Modifier
+                    .height(500.dp)
+                    .clip(RectangleShape)) {
+                    if (isImageReady) {
+                        val imageFile = File(imagePath)
+                        val uniqueImagePath = "$imagePath?timestamp=${System.currentTimeMillis()}"
+                        val bitmap = BitmapFactory.decodeFile(imageFile.path)
+
+                        if (bitmap != null) {
+                            println("Bitmap is not null for path: $uniqueImagePath")
+                        }
+
+                        if (imageFile.exists()) {
+                            println("ZoomableImage recomposed with recomposeKey: $recomposeKey")
+                            AsyncImage(
+                                model = ImageRequest.Builder(LocalContext.current)
+                                    .data(uniqueImagePath.toUri()) // Use a unique key to bypass cache
+                                    .memoryCacheKey(uniqueImagePath) // Optional custom cache key
+                                    .diskCachePolicy(CachePolicy.DISABLED) // Disable disk cache
+                                    .memoryCachePolicy(CachePolicy.DISABLED) // Disable memory cache
+                                    .build(),
+                                contentDescription = description,
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .graphicsLayer(
+                                        scaleX = scale.floatValue,
+                                        scaleY = scale.floatValue,
+                                        rotationZ = rotationState.floatValue,
+                                        transformOrigin = TransformOrigin.Center
+                                    )
+
+                            )
+                        } else {
+                            println("Image file does not exist: $imagePath")
+                            Image(
+                                modifier = Modifier.fillMaxSize(),
+                                painter = painterResource(id = R.drawable.baseline_warning_24),
+                                contentDescription = "Image Not Found"
+                            )
+                        }
+                    }
+                    else {
+                        // Placeholder while the image is being delayed
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(Color.White),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator()
+                        }
                     }
                 }
             }
         }
     }
 }
-
-
-
 
 
 @Composable
@@ -266,7 +330,6 @@ fun ZoomableImage2(imagePath: String, description: String, visibility: Boolean =
         }
     }
 }
-
 
 
 @Composable

@@ -1,11 +1,18 @@
 package com.aican.tlcanalyzer.ui.navigation
 
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.aican.tlcanalyzer.ui.pages.image_analysis.AnalysisScreen
 import com.aican.tlcanalyzer.ui.pages.image_analysis.report_section.IntensityPlotScreen
 import com.aican.tlcanalyzer.ui.pages.image_analysis.report_section.PlotTableScreen
@@ -13,11 +20,13 @@ import com.aican.tlcanalyzer.ui.pages.image_analysis.report_section.ReportScreen
 import com.aican.tlcanalyzer.ui.pages.image_analysis.report_section.VolumePlotScreen
 import com.aican.tlcanalyzer.ui.pages.settings_pages.CropScreen
 import com.aican.tlcanalyzer.ui.pages.settings_pages.ProjectSettingsScreen
+import com.aican.tlcanalyzer.ui.pages.split_image_section.SplitImageScreen
 import com.aican.tlcanalyzer.viewmodel.project.ImageAnalysisViewModel
 import com.aican.tlcanalyzer.viewmodel.project.IntensityChartViewModel
 import com.aican.tlcanalyzer.viewmodel.project.ProjectViewModel
 
 
+@OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun ImageAnalysisNavHost(
     modifier: Modifier = Modifier,
@@ -25,6 +34,8 @@ fun ImageAnalysisNavHost(
     projectViewModel: ProjectViewModel,
     imageAnalysisViewModel: ImageAnalysisViewModel,
     intensityChartViewModel: IntensityChartViewModel,
+    isSplitProject: Boolean,
+    imageId: String,
     projectId: String
 ) {
 
@@ -32,7 +43,10 @@ fun ImageAnalysisNavHost(
         modifier = modifier,
         navController = navController,
         startDestination = ImageAnalysisRoute.ROUTE_IMAGE_ANALYSIS
+
     ) {
+
+
 
         composable<ImageAnalysisRoute.ROUTE_IMAGE_ANALYSIS> {
 
@@ -41,6 +55,9 @@ fun ImageAnalysisNavHost(
                 imageAnalysisViewModel = imageAnalysisViewModel,
                 intensityChartViewModel = intensityChartViewModel,
                 projectId = projectId,
+                isSplitProject = isSplitProject,
+                imageId = imageId,
+                onBack = { navController.popBackStack() },
                 onIntensityPlot = {
                     navController.navigate(ImageAnalysisRoute.ROUTE_INTENSITY_PLOT) {
                         launchSingleTop = true
@@ -122,9 +139,13 @@ fun ImageAnalysisNavHost(
 
         composable<ImageAnalysisRoute.ROUTE_REPORT> {
             ReportScreen(
-            ) {
+                imageAnalysisViewModel = imageAnalysisViewModel,
+                intensityChartViewModel = intensityChartViewModel,
+                projectViewModel = projectViewModel,
+                projectId = projectId
+            )
 
-            }
+
         }
 
 

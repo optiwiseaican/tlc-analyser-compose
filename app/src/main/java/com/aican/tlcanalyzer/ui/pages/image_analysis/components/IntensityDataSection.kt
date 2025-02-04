@@ -1,5 +1,6 @@
 package com.aican.tlcanalyzer.ui.pages.image_analysis.components
 
+import android.graphics.Bitmap
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.MaterialTheme
@@ -21,9 +22,12 @@ import com.github.mikephil.charting.interfaces.datasets.ILineDataSet
 import java.util.Collections
 
 @Composable
-fun IntensityDataSection(parts: Int,
+fun IntensityDataSection(
+    parts: Int,
     intensityDataState: IntensityDataState, lineChartData: List<Entry>,
-    contourDataList: List<ContourData>
+    contourDataList: List<ContourData>,
+    onBitmapCaptured: (Bitmap?) -> Unit
+
 ) {
     when (intensityDataState) {
         is IntensityDataState.Loading -> {
@@ -32,7 +36,12 @@ fun IntensityDataSection(parts: Int,
 
         is IntensityDataState.Success -> {
             if (lineChartData.isNotEmpty()) {
-                LineGraph(parts = parts, entries = lineChartData, contourDataList = contourDataList)
+                LineGraph(
+                    parts = parts,
+                    entries = lineChartData,
+                    contourDataList = contourDataList,
+                    onBitmapCaptured = onBitmapCaptured
+                )
             } else {
                 Text(
                     text = "No intensity data available for graph",
@@ -66,6 +75,7 @@ fun IntensityDataSection(parts: Int,
             )
         }
     }
+
 }
 
 @Composable
@@ -73,8 +83,10 @@ fun LineGraph(
     parts: Int,
     entries: List<Entry>,
     dataLabel: String = "Intensity Data",
-    contourDataList: List<ContourData>
+    contourDataList: List<ContourData>,
+    onBitmapCaptured: (Bitmap?) -> Unit
 ) {
+    var chartBitmap: Bitmap? = null
     AndroidView(
         modifier = Modifier
             .fillMaxWidth()
@@ -96,7 +108,7 @@ fun LineGraph(
                 setTouchEnabled(true)
                 setScaleEnabled(true)
                 isDragEnabled = true
-                animateX(400)
+//                animateX(400)
             }
         },
         update = { chart ->
@@ -151,8 +163,18 @@ fun LineGraph(
             chart.data = LineData(combinedDataSets)
             chart.notifyDataSetChanged()
             chart.invalidate()
+
+            chart.post {
+                try {
+                    onBitmapCaptured.invoke(chart.chartBitmap)
+
+                } catch (e: Exception) {
+                    onBitmapCaptured.invoke(null)
+                }
+            }
         }
     )
+
 }
 
 

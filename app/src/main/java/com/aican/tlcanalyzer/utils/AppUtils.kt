@@ -1,12 +1,23 @@
 package com.aican.tlcanalyzer.utils
 
+import android.content.Context
+import android.graphics.Bitmap
+import android.util.Log
 import androidx.compose.ui.graphics.Color
+import java.io.File
+import java.io.FileNotFoundException
+import java.io.FileOutputStream
+import java.io.IOException
+import java.math.BigDecimal
+import java.math.RoundingMode
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import kotlin.math.absoluteValue
 
 object AppUtils {
+
+    var MAIN_IMAGE_COUNT = 0
 
     var retake = false
 
@@ -85,5 +96,56 @@ object AppUtils {
             "Invalid Timestamp"
         }
     }
+
+    fun formatToTwoDecimalPlaces(value: String?): String {
+        try {
+            val decimalValue = BigDecimal(value).setScale(2, RoundingMode.HALF_UP)
+            return decimalValue.toString()
+        } catch (e: NumberFormatException) {
+            return "0.00" // Default to 0.00 if input is invalid
+        }
+    }
+
+
+    fun saveImageToFile(
+        context: Context,
+        bitmap: Bitmap,
+        fileName: String,
+        folderName: String
+    ): String? {
+        var outStream: FileOutputStream? = null
+        return try {
+            // Create directory path
+            val dir = File(
+                folderName
+            )
+
+            if (!dir.exists()) {
+                dir.mkdirs() // Create directories if they don't exist
+            }
+
+            // File to save the image
+            val outFile = File(dir, fileName)
+            outStream = FileOutputStream(outFile)
+
+            // Compress and write bitmap to file
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outStream)
+            outStream.flush()
+            outStream.close()
+
+            // Log success and return file path
+            Log.d("TAG", "Image saved at: ${outFile.absolutePath}")
+            outFile.absolutePath // Return the absolute path of the saved file
+        } catch (e: FileNotFoundException) {
+            e.printStackTrace()
+            null
+        } catch (e: IOException) {
+            e.printStackTrace()
+            null
+        } finally {
+            outStream?.close()
+        }
+    }
+
 
 }
