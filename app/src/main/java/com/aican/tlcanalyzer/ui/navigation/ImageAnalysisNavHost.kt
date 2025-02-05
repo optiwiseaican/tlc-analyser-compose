@@ -14,6 +14,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.aican.tlcanalyzer.ui.pages.image_analysis.AnalysisScreen
+import com.aican.tlcanalyzer.ui.pages.image_analysis.peak_detection_section.PeakDetectionAutomatic
+import com.aican.tlcanalyzer.ui.pages.image_analysis.peak_detection_section.PeakDetectionManually
 import com.aican.tlcanalyzer.ui.pages.image_analysis.report_section.IntensityPlotScreen
 import com.aican.tlcanalyzer.ui.pages.image_analysis.report_section.PlotTableScreen
 import com.aican.tlcanalyzer.ui.pages.image_analysis.report_section.ReportScreen
@@ -36,8 +38,9 @@ fun ImageAnalysisNavHost(
     intensityChartViewModel: IntensityChartViewModel,
     isSplitProject: Boolean,
     imageId: String,
-    projectId: String
-) {
+    projectId: String,
+
+    ) {
 
     NavHost(
         modifier = modifier,
@@ -45,7 +48,6 @@ fun ImageAnalysisNavHost(
         startDestination = ImageAnalysisRoute.ROUTE_IMAGE_ANALYSIS
 
     ) {
-
 
 
         composable<ImageAnalysisRoute.ROUTE_IMAGE_ANALYSIS> {
@@ -117,7 +119,38 @@ fun ImageAnalysisNavHost(
             IntensityPlotScreen(
                 imageAnalysisViewModel = imageAnalysisViewModel,
                 intensityChartViewModel = intensityChartViewModel,
-                projectViewModel = projectViewModel
+                projectViewModel = projectViewModel,
+                onAutoDetectionClick = {
+                    navController.navigate(ImageAnalysisRoute.ROUTE_AUTO_DETECTION)
+
+                },
+                onPlotOnGraphClick = {
+                    navController.navigate(ImageAnalysisRoute.ROUTE_PLOT_ON_GRAPH)
+
+                }
+            )
+        }
+
+        composable<ImageAnalysisRoute.ROUTE_PLOT_ON_GRAPH> {
+            PeakDetectionManually(
+                imageAnalysisViewModel = imageAnalysisViewModel,
+                intensityChartViewModel = intensityChartViewModel,
+                projectViewModel = projectViewModel,
+                peakDetectionManuallySaveClicked = {
+                    navController.navigate(ImageAnalysisRoute.ROUTE_IMAGE_ANALYSIS) {
+                        popUpTo(ImageAnalysisRoute.ROUTE_IMAGE_ANALYSIS) { inclusive = true }
+
+                    }
+                }
+            )
+        }
+
+
+        composable<ImageAnalysisRoute.ROUTE_AUTO_DETECTION> {
+            PeakDetectionAutomatic(
+                imageAnalysisViewModel = imageAnalysisViewModel,
+                intensityChartViewModel = intensityChartViewModel,
+                projectViewModel = projectViewModel,
             )
         }
 

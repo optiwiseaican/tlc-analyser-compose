@@ -54,12 +54,13 @@ fun ReportSection(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
-            ReportCard(title = "Volume Plot", icon = Icons.Default.ShoppingCart) {
-                onNavigate("VolumePlotScreen")
-            }
             ReportCard(title = "Intensity Plot", icon = Icons.Default.ShoppingCart) {
                 onNavigate("IntensityPlotScreen")
             }
+            ReportCard(title = "Volume Plot", icon = Icons.Default.ShoppingCart) {
+                onNavigate("VolumePlotScreen")
+            }
+
         }
         Spacer(modifier = Modifier.height(16.dp))
         Row(

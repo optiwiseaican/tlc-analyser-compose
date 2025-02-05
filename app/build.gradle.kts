@@ -128,5 +128,6 @@ dependencies {
     implementation("com.github.barteksc:AndroidPdfViewer:2.0.2")
     implementation("com.itextpdf:itext7-core:7.1.16")
 
+//    implementation("com.jsibbold:zoomage:1.3.1")
 
 }
