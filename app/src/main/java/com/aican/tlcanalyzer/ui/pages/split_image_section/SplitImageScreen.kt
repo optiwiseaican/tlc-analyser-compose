@@ -37,6 +37,7 @@ fun SplitImageScreen(
     modifier: Modifier = Modifier,
     projectViewModel: ProjectViewModel = viewModel(),
     projectId: String,
+    projectName: String,
     navController: NavHostController,
     onBackClick: () -> Unit,
     onAddMainImageClick: () -> Unit,
@@ -44,7 +45,7 @@ fun SplitImageScreen(
     onMainImageClick: (Image) -> Unit,
     onSplitImageClick: (Image) -> Unit
 
-    ) {
+) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
 
@@ -52,7 +53,6 @@ fun SplitImageScreen(
     var mainImages by remember { mutableStateOf<List<Image>>(emptyList()) }
     var splitImages by remember { mutableStateOf<List<Image>>(emptyList()) }
 
-    var projectName by remember { mutableStateOf("Not Defined") }
 
     LaunchedEffect(projectId) {
         coroutineScope.launch {
@@ -242,7 +242,11 @@ fun SplitImageItem(image: Image, onClick: (Image) -> Unit) {
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(text = image.name, fontWeight = FontWeight.Bold)
-                Text(text = AppUtils.decodeTimestamp(image.timeStamp), fontSize = 12.sp, color = Color.Gray)
+                Text(
+                    text = AppUtils.decodeTimestamp(image.timeStamp),
+                    fontSize = 12.sp,
+                    color = Color.Gray
+                )
             }
         }
     }

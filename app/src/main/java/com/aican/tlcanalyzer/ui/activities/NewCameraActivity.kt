@@ -12,6 +12,7 @@ import android.os.Bundle
 import android.view.View
 import android.widget.SeekBar
 import android.widget.Toast
+import androidx.activity.ComponentActivity
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -27,7 +28,7 @@ import java.util.*
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
-class NewCameraActivity : AppCompatActivity() {
+class NewCameraActivity : ComponentActivity() {
 
     private lateinit var binding: ActivityNewCameraBinding
     private lateinit var imageCapture: ImageCapture
@@ -41,12 +42,17 @@ class NewCameraActivity : AppCompatActivity() {
 
     private var projectName: String = ""
     private var projectDescription: String = ""
+    var mainImageAdding: String? = null
+    var projectId: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityNewCameraBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        supportActionBar?.hide()
+
+        mainImageAdding = intent.getStringExtra("mainImageAdding")
+        projectId = intent.getStringExtra("projectId")
+
 
         // Initialize variables and listeners
         initVariables()
@@ -93,11 +99,24 @@ class NewCameraActivity : AppCompatActivity() {
 
                 handleSelectedImage(it)
 
-                val intent = Intent(this, CapturedImagePreview::class.java)
-                intent.putExtra("projectImageUri", uri.toString())
-                intent.putExtra("projectName", projectName)
-                intent.putExtra("projectDescription", projectDescription)
-                startActivity(intent)
+                if (mainImageAdding != null && mainImageAdding == "true") {
+                    val intent = Intent(this, CapturedImagePreview::class.java)
+                    intent.putExtra("projectImageUri", uri.toString())
+                    intent.putExtra("projectName", projectName)
+                    intent.putExtra("projectDescription", projectDescription)
+                    intent.putExtra("mainImageAdding", mainImageAdding)
+                    intent.putExtra("projectId", projectId)
+                    startActivity(intent)
+
+                } else {
+                    val intent = Intent(this, CapturedImagePreview::class.java)
+                    intent.putExtra("projectImageUri", uri.toString())
+                    intent.putExtra("projectName", projectName)
+                    intent.putExtra("projectDescription", projectDescription)
+                    startActivity(intent)
+
+                }
+
 
             }
         }

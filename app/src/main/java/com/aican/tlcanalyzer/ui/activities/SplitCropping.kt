@@ -3,6 +3,7 @@ package com.aican.tlcanalyzer.ui.activities
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.ContextWrapper
+import android.content.Intent
 import android.graphics.Bitmap
 import android.os.Bundle
 import android.os.Environment
@@ -11,9 +12,11 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.View.OnTouchListener
 import android.widget.Toast
+import androidx.activity.ComponentActivity
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
+import com.aican.tlcanalyzer.MainActivity
 import com.aican.tlcanalyzer.R
 import com.aican.tlcanalyzer.data.database.project.entities.Image
 import com.aican.tlcanalyzer.data.database.project.entities.ImageType
@@ -42,7 +45,7 @@ import java.util.Date
 import java.util.Locale
 
 @AndroidEntryPoint
-class SplitCropping : AppCompatActivity() {
+class SplitCropping : ComponentActivity() {
 
     private var originalImage: Mat? = null
     private val verticalLinesXCoordinates = ArrayList<Int>()
@@ -63,13 +66,16 @@ class SplitCropping : AppCompatActivity() {
 
     var projectDescription: String? = null
 
+
+    var mainImageAdding: String? = null
+    var projectId: String? = null
+
     @SuppressLint("ClickableViewAccessibility")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivitySplitCroppingBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        supportActionBar!!.hide()
 
         binding.back.setOnClickListener { finish() }
 
@@ -83,6 +89,9 @@ class SplitCropping : AppCompatActivity() {
         projectDescription = intent.getStringExtra("projectDescription").toString()
         projectImage = intent.getStringExtra("projectImage").toString()
         tableName = intent.getStringExtra("tableName").toString()
+
+        mainImageAdding = intent.getStringExtra("mainImageAdding")
+        projectId = intent.getStringExtra("projectId")
 
         imageBitmap = ImageCache.retrieveBitmap()
         loadedBitmap = imageBitmap
@@ -118,96 +127,212 @@ class SplitCropping : AppCompatActivity() {
 
         binding.btnFinalSlicing.setOnClickListener {
             if (verticalLinesXCoordinates.isNotEmpty() && imageBitmap != null) {
-                lifecycleScope.launch {
-                    val projectId = AppUtils.generateRandomId("TLC_IDN", 8)
 
-                    // ✅ Create metadata file
-                    val metadataPath = SplitImageProjectManager.createMetadataFile(
-                        this@SplitCropping,
-                        projectId,
-                        projectName!!
-                    )
+                if (mainImageAdding != null && mainImageAdding == "true" && !projectId.isNullOrEmpty()) {
+                    lifecycleScope.launch {
 
-                    if (metadataPath == null) {
-                        Toast.makeText(
+                        // ✅ Generate a new unique image ID for the main image
+                        val mainImageId = "main_" + (AppUtils.MAIN_IMAGE_COUNT + 1)
+
+                        // ✅ Save the new main image to the project folder
+                        val mainImagePaths = SplitImageProjectManager.addMainImageToProject(
                             this@SplitCropping,
-                            "❌ Failed to create metadata file",
-                            Toast.LENGTH_LONG
-                        ).show()
-                        return@launch
+                            projectId!!,
+                            mainImageId,
+                            imageBitmap!!,
+                            imageBitmap!!,
+                            imageBitmap!!
+                        )
+
+                        if (mainImagePaths.all { it != null }) {
+                            println("✅ New Main Image: ${mainImagePaths[0]}")
+                            println("✅ Original Image: ${mainImagePaths[1]}")
+                            println("✅ Contour Image: ${mainImagePaths[2]}")
+
+                            val imageId = AppUtils.generateRandomId("IMAGE", 8)
+                            val timestamp = SimpleDateFormat(
+                                "yyyyMMdd_HHmmss",
+                                Locale.getDefault()
+                            ).format(Date())
+
+                            // ✅ Generate a new main image name
+                            val mainImageName = "Main Image ${AppUtils.MAIN_IMAGE_COUNT + 1}"
+
+                            // ✅ Insert the new main image into the database
+                            projectViewModel.insertImage(
+                                Image(
+                                    imageId = imageId,
+                                    name = mainImageName,
+                                    originalImagePath = mainImagePaths[1].toString(),
+                                    croppedImagePath = mainImagePaths[0].toString(),
+                                    contourImagePath = mainImagePaths[2].toString(),
+                                    timeStamp = timestamp,
+                                    thresholdVal = 0,
+                                    noOfSpots = 0,
+                                    description = "New Main Image added to Project",
+                                    projectId = projectId!!,
+                                    imageType = ImageType.MAIN
+                                )
+                            )
+
+                            // ✅ **Update project metadata to indicate a new main image**
+                            val isMetadataUpdated = SplitImageProjectManager.updateProjectMetadata(
+                                this@SplitCropping,
+                                projectId!!,
+                                mainImageId
+                            )
+
+                            if (isMetadataUpdated) {
+                                println("✅ Project metadata updated successfully for $projectId")
+                            } else {
+                                println("❌ Failed to update project metadata for $projectId")
+                            }
+
+                            // ✅ Slice the new main image into split images
+                            sliceImage(
+                                projectId = projectId!!,
+                                mainImageId = mainImageId,
+                                projectName = projectName!!,
+                                projectDescription = projectDescription!!,
+                                timestamp = timestamp,
+                                mainImagePath = mainImagePaths[0]!!,
+                                mainImageName = mainImageName
+                            )
+
+                            runOnUiThread {
+                                Toast.makeText(
+                                    this@SplitCropping,
+                                    "✅ New Main Image Added & Slicing Completed!",
+                                    Toast.LENGTH_LONG
+                                ).show()
+
+                                val intent = Intent(
+                                    this@SplitCropping,
+                                    SplitImageActivity::class.java
+                                ).apply {
+                                    putExtra("projectId", projectId)
+                                    putExtra("projectName", projectName)
+                                    putExtra("projectDescription", projectDescription)
+                                }
+                                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                                startActivity(intent)
+
+
+                            }
+                        } else {
+                            println("❌ Failed to save new main images")
+                        }
                     }
+                } else {
+                    lifecycleScope.launch {
+                        val projectId = AppUtils.generateRandomId("TLC_IDN", 8)
 
-                    // ✅ Save the main image
-                    val mainImageId = "main_1"
-                    val mainImagePaths = SplitImageProjectManager.addMainImageToProject(
-                        this@SplitCropping,
-                        projectId,
-                        mainImageId,
-                        imageBitmap!!,
-                        imageBitmap!!,
-                        imageBitmap!!,
-                    )
+                        // ✅ Create metadata file
+                        val metadataPath = SplitImageProjectManager.createMetadataFile(
+                            this@SplitCropping,
+                            projectId,
+                            projectName!!
+                        )
 
-                    if (mainImagePaths.all { it != null }) {
-                        println("✅ Main Image: ${mainImagePaths[0]}")
-                        println("✅ Original Image: ${mainImagePaths[1]}")
-                        println("✅ Contour Image: ${mainImagePaths[2]}")
+                        if (metadataPath == null) {
+                            runOnUiThread {
+                                Toast.makeText(
+                                    this@SplitCropping,
+                                    "❌ Failed to create metadata file",
+                                    Toast.LENGTH_LONG
+                                ).show()
+                            }
+                            return@launch
+                        }
 
-                        val imageId = AppUtils.generateRandomId("IMAGE", 8)
-                        val timestamp =
-                            SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-                        val projectCount = projectViewModel.getProjectCount()
+                        // ✅ Save the main image
+                        val mainImageId = "main_1"
+                        val mainImagePaths = SplitImageProjectManager.addMainImageToProject(
+                            this@SplitCropping,
+                            projectId,
+                            mainImageId,
+                            imageBitmap!!,
+                            imageBitmap!!,
+                            imageBitmap!!,
+                        )
+
+                        if (mainImagePaths.all { it != null }) {
+                            println("✅ Main Image: ${mainImagePaths[0]}")
+                            println("✅ Original Image: ${mainImagePaths[1]}")
+                            println("✅ Contour Image: ${mainImagePaths[2]}")
+
+                            val imageId = AppUtils.generateRandomId("IMAGE", 8)
+                            val timestamp =
+                                SimpleDateFormat(
+                                    "yyyyMMdd_HHmmss",
+                                    Locale.getDefault()
+                                ).format(Date())
+                            val projectCount = projectViewModel.getProjectCount()
 
 //                        AppUtils.MAIN_IMAGE_COUNT =
 
-                        projectViewModel.insertProjectDetails(
-                            ProjectDetails(
+                            projectViewModel.insertProjectDetails(
+                                ProjectDetails(
+                                    projectId = projectId,
+                                    projectName = projectName!!,
+                                    projectDescription = projectDescription!!,
+                                    timeStamp = timestamp,
+                                    mainImagePath = mainImagePaths[0]!!,
+                                    projectNumber = projectCount.toString(),
+                                    imageSplitAvailable = true,
+                                )
+                            )
+
+                            val mainImageName = "Main Image ${AppUtils.MAIN_IMAGE_COUNT + 1}"
+
+                            projectViewModel.insertImage(
+                                Image(
+                                    imageId = imageId,
+                                    name = mainImageName,
+                                    originalImagePath = mainImagePaths[1].toString(),
+                                    croppedImagePath = mainImagePaths[0].toString(),
+                                    contourImagePath = mainImagePaths[2].toString(),
+                                    timeStamp = timestamp,
+                                    thresholdVal = 0,
+                                    noOfSpots = 0,
+                                    description = "Main Image with Cropped and Contour Images",
+                                    projectId = projectId,
+                                    imageType = ImageType.MAIN
+                                )
+                            )
+
+                            // ✅ Slice the image into split images
+                            sliceImage(
                                 projectId = projectId,
+                                mainImageId = mainImageId,
                                 projectName = projectName!!,
                                 projectDescription = projectDescription!!,
-                                timeStamp = timestamp,
+                                timestamp = timestamp,
                                 mainImagePath = mainImagePaths[0]!!,
-                                projectNumber = projectCount.toString(),
-                                imageSplitAvailable = true,
+                                mainImageName = mainImageName
                             )
-                        )
 
-                        val mainImageName = "Main Image ${AppUtils.MAIN_IMAGE_COUNT + 1}"
+                            runOnUiThread {
+                                Toast.makeText(
+                                    this@SplitCropping,
+                                    "✅ Slicing Completed Successfully!",
+                                    Toast.LENGTH_LONG
+                                ).show()
+                            }
 
-                        projectViewModel.insertImage(
-                            Image(
-                                imageId = imageId,
-                                name = mainImageName,
-                                originalImagePath = mainImagePaths[1].toString(),
-                                croppedImagePath = mainImagePaths[0].toString(),
-                                contourImagePath = mainImagePaths[2].toString(),
-                                timeStamp = timestamp,
-                                thresholdVal = 0,
-                                noOfSpots = 0,
-                                description = "Main Image with Cropped and Contour Images",
-                                projectId = projectId,
-                                imageType = ImageType.MAIN
-                            )
-                        )
-
-                        // ✅ Slice the image into split images
-                        sliceImage(
-                            projectId = projectId, mainImageId = mainImageId,
-                            projectName = projectName!!, projectDescription = projectDescription!!,
-                            timestamp = timestamp, mainImagePath = mainImagePaths[0]!!,
-                            mainImageName = mainImageName
-                        )
-
-                        runOnUiThread {
-                            Toast.makeText(
-                                this@SplitCropping,
-                                "✅ Slicing Completed Successfully!",
-                                Toast.LENGTH_LONG
-                            ).show()
+                        } else {
+                            println("❌ Failed to save main images")
                         }
+                        runOnUiThread {
+                            val intent = Intent(
+                                this@SplitCropping,
+                                MainActivity::class.java
+                            ).apply {
 
-                    } else {
-                        println("❌ Failed to save main images")
+                            }
+                            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                            startActivity(intent)
+                        }
                     }
                 }
             } else {

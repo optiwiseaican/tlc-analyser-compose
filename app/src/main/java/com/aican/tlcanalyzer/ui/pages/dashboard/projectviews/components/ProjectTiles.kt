@@ -76,11 +76,15 @@ fun ProjectTiles(modifier: Modifier = Modifier, project: ProjectDetails) {
                 if (project.imageSplitAvailable) {
                     val intent = Intent(context, SplitImageActivity::class.java).apply {
                         putExtra("projectId", project.projectId)
+                        putExtra("projectName", project.projectName)
+                        putExtra("projectDescription", project.projectDescription)
                     }
                     context.startActivity(intent)
                 } else {
                     val intent = Intent(context, NewImageAnalysis::class.java).apply {
                         putExtra("projectId", project.projectId)
+                        putExtra("projectName", project.projectName)
+                        putExtra("projectDescription", project.projectDescription)
                     }
                     context.startActivity(intent)
                 }

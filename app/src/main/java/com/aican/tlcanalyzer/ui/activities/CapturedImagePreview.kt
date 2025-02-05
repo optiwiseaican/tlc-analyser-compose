@@ -9,7 +9,9 @@ import android.os.Bundle
 import android.os.Environment
 import android.provider.MediaStore
 import android.util.Log
+import android.view.View
 import android.widget.Toast
+import androidx.activity.ComponentActivity
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -17,6 +19,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.lifecycleScope
+import com.aican.tlcanalyzer.MainActivity
 import com.aican.tlcanalyzer.R
 import com.aican.tlcanalyzer.data.database.project.dao.ImageDao
 import com.aican.tlcanalyzer.data.database.project.dao.ProjectDetailsDao
@@ -40,7 +43,7 @@ import java.util.Locale
 import javax.inject.Inject
 
 @AndroidEntryPoint
-class CapturedImagePreview : AppCompatActivity() {
+class CapturedImagePreview : ComponentActivity() {
 
     lateinit var binding: ActivityCapturedImagePreviewBinding
     private var projectImageUriString = ""
@@ -48,6 +51,8 @@ class CapturedImagePreview : AppCompatActivity() {
     private var projectDescription = ""
     var projectImageUri: Uri? = null
 
+    var mainImageAdding: String? = null
+    var projectId: String? = null
 
     private val projectViewModel: ProjectViewModel by viewModels()
 
@@ -55,11 +60,12 @@ class CapturedImagePreview : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityCapturedImagePreviewBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        supportActionBar?.hide()
 
         projectImageUriString = intent.getStringExtra("projectImageUri") ?: ""
         projectName = intent.getStringExtra("projectName") ?: ""
         projectDescription = intent.getStringExtra("projectDescription") ?: ""
+        mainImageAdding = intent.getStringExtra("mainImageAdding")
+        projectId = intent.getStringExtra("projectId")
 
         // Display the image using the URI
         if (projectImageUriString.isNotEmpty()) {
@@ -75,7 +81,14 @@ class CapturedImagePreview : AppCompatActivity() {
 
         }
 
+        if (mainImageAdding != null && mainImageAdding == "true") {
+            binding.btnSave.visibility = View.GONE
+        } else {
+            binding.btnSave.visibility = View.VISIBLE
+        }
+
         binding.btnSave.setOnClickListener {
+
             val projectId = AppUtils.generateRandomId("TLC_IDN", 8)
             val projectFolder =
                 "${ContextWrapper(this).externalMediaDirs[0]}/TLC_Analyzer/$projectId"
@@ -141,6 +154,15 @@ class CapturedImagePreview : AppCompatActivity() {
                 "Images saved and metadata stored successfully!",
                 Toast.LENGTH_SHORT
             ).show()
+
+            val intent = Intent(
+                this@CapturedImagePreview,
+                MainActivity::class.java
+            ).apply {
+
+            }
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+            startActivity(intent)
         }
 
         binding.splitBtn.setOnClickListener {
@@ -153,6 +175,8 @@ class CapturedImagePreview : AppCompatActivity() {
 
                 intwnt.putExtra("projectName", projectName)
                 intwnt.putExtra("projectDescription", projectDescription)
+                intwnt.putExtra("projectId", projectId)
+                intwnt.putExtra("mainImageAdding", mainImageAdding)
 
 
                 startActivity(intwnt)

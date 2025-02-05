@@ -12,6 +12,8 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.aican.tlcanalyzer.data.database.project.entities.ProjectDetails
+import com.aican.tlcanalyzer.ui.activities.NewCameraActivity
 import com.aican.tlcanalyzer.ui.activities.NewImageAnalysis
 import com.aican.tlcanalyzer.ui.pages.split_image_section.SplitImageScreen
 import com.aican.tlcanalyzer.viewmodel.project.ImageAnalysisViewModel
@@ -25,7 +27,9 @@ fun SplitImageNavHost(
     projectViewModel: ProjectViewModel,
     imageAnalysisViewModel: ImageAnalysisViewModel,
     intensityChartViewModel: IntensityChartViewModel,
-    projectId: String
+    projectId: String,
+    projectDescription: String,
+    projectName: String,
 ) {
     NavHost(
         modifier = modifier,
@@ -55,10 +59,18 @@ fun SplitImageNavHost(
             SplitImageScreen(
                 projectViewModel = projectViewModel,
                 projectId = projectId,
+                projectName = projectName,
                 navController = navController,
                 onBackClick = { navController.popBackStack() },
-                onSettingsClick = { /* Handle Settings Click */ },
-                onAddMainImageClick = { /* Handle Add Main Image */ },
+                onSettingsClick = { },
+                onAddMainImageClick = {
+                    val intent = Intent(context, NewCameraActivity::class.java)
+                    intent.putExtra("projectId", projectId)
+                    intent.putExtra("mainImageAdding", "true")
+                    intent.putExtra("projectName", projectName)
+                    intent.putExtra("projectDescription", projectDescription)
+                    context.startActivity(intent)
+                },
                 onMainImageClick = { image ->
                     var intent = Intent(context, NewImageAnalysis::class.java)
                     intent.putExtra("projectId", projectId)

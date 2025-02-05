@@ -98,6 +98,53 @@ object SplitImageProjectManager {
         }
     }
 
+    fun updateProjectMetadata(
+        context: Context,
+        projectId: String,
+        mainImageId: String
+    ): Boolean {
+        return try {
+            val metadataFile = File(getProjectPath(context, projectId), "metadata.json")
+
+            if (!metadataFile.exists()) {
+                Toast.makeText(context, "❌ Metadata file not found!", Toast.LENGTH_LONG).show()
+                return false
+            }
+
+            // ✅ Read existing metadata
+            val metadata = Json.decodeFromString<ProjectMetadata>(metadataFile.readText())
+
+            // ✅ Check if the main image already exists
+            if (metadata.main_images.any { it.mainId == mainImageId }) {
+                Toast.makeText(context, "⚠️ Main Image already exists!", Toast.LENGTH_LONG).show()
+                return false
+            }
+
+            // ✅ Add the new main image entry
+            val newMainImage = MainImage(
+                mainId = mainImageId,
+                path = "${getProjectPath(context, projectId)}/$mainImageId.jpg"
+            )
+            metadata.main_images.add(newMainImage)
+
+            // ✅ Update total count of main images
+            metadata.total_main_images = metadata.main_images.size
+
+            // ✅ Write updated metadata back to file
+            metadataFile.writeText(Json.encodeToString(metadata))
+
+            Toast.makeText(context, "✅ Metadata updated successfully!", Toast.LENGTH_LONG).show()
+            true
+
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Toast.makeText(context, "❌ Error updating metadata: ${e.message}", Toast.LENGTH_LONG)
+                .show()
+            false
+        }
+    }
+
+
     /**
      * 📌 Add a New Main Image to Project Metadata
      */

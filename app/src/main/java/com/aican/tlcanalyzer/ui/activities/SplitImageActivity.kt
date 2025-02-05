@@ -36,6 +36,8 @@ class SplitImageActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         val projectId = intent.getStringExtra("projectId") ?: ""
+        val projectName = intent.getStringExtra("projectName") ?: ""
+        val projectDescription = intent.getStringExtra("projectDescription") ?: ""
 
         setContent {
             val navController: NavHostController = rememberNavController()
@@ -44,17 +46,19 @@ class SplitImageActivity : ComponentActivity() {
                 Box(modifier = Modifier.padding(innerPadding)) {
 
 
-                        SplitImageNavHost(
-                            navController = navController,
-                            projectViewModel = viewModel,
-                            imageAnalysisViewModel = imageAnalysisViewModel,
-                            intensityChartViewModel = intensityChartViewModel,
-                            projectId = projectId,
-                        )
+                    SplitImageNavHost(
+                        navController = navController,
+                        projectViewModel = viewModel,
+                        imageAnalysisViewModel = imageAnalysisViewModel,
+                        intensityChartViewModel = intensityChartViewModel,
+                        projectId = projectId,
+                        projectDescription = projectDescription,
+                        projectName = projectName,
+                    )
 
                 }
             }
-            }
         }
+    }
 
 }
