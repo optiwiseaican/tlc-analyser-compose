@@ -112,6 +112,7 @@ fun LineGraph(
             }
         },
         update = { chart ->
+            println("From Intensity Plot Screen: $entries")
             val mainDataSet = LineDataSet(entries, dataLabel).apply {
                 color = android.graphics.Color.BLUE
                 valueTextColor = android.graphics.Color.BLACK

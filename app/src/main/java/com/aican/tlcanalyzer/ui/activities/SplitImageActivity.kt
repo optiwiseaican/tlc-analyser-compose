@@ -20,6 +20,7 @@ import com.aican.tlcanalyzer.ui.navigation.ImageAnalysisNavHost
 import com.aican.tlcanalyzer.ui.navigation.SplitImageNavHost
 import com.aican.tlcanalyzer.viewmodel.project.ImageAnalysisViewModel
 import com.aican.tlcanalyzer.viewmodel.project.IntensityChartViewModel
+import com.aican.tlcanalyzer.viewmodel.project.MultipleImageAnalysisViewModel
 import com.aican.tlcanalyzer.viewmodel.project.ProjectViewModel
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -30,6 +31,7 @@ class SplitImageActivity : ComponentActivity() {
     private val viewModel: ProjectViewModel by viewModels()
     private val imageAnalysisViewModel: ImageAnalysisViewModel by viewModels()
     private val intensityChartViewModel: IntensityChartViewModel by viewModels()
+    private val multipleImageAnalysisViewModel: MultipleImageAnalysisViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -54,6 +56,7 @@ class SplitImageActivity : ComponentActivity() {
                         projectId = projectId,
                         projectDescription = projectDescription,
                         projectName = projectName,
+                        multipleImageAnalysisViewModel = multipleImageAnalysisViewModel
                     )
 
                 }

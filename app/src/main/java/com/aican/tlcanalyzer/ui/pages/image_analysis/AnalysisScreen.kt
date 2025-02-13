@@ -574,6 +574,7 @@ private suspend fun fetchIntensityDataIfReady(
         )
         if (result is IntensityDataState.Success) {
             intensityChartViewModel.prepareChartData(result.data)
+            imageAnalysisViewModel.saveIntensityData(imageDetail.imageId, result.data)
         }
     }
 }

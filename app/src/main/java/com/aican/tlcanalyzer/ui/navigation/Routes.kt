@@ -3,7 +3,6 @@ package com.aican.tlcanalyzer.ui.navigation
 import  kotlinx.serialization.Serializable
 
 
-
 sealed class RegisterRoute {
 
     @Serializable
@@ -59,8 +58,15 @@ sealed class ImageAnalysisRoute {
 
 }
 
-sealed class SplitImageRoute{
+sealed class SplitImageRoute {
     @Serializable
     data object ROUTE_SPLIT_IMAGE : SplitImageRoute()
+
+    @Serializable
+    data object ROUTE_MULTIPLE_IMAGE_ANALYSIS : SplitImageRoute()
+
+
+    @Serializable
+    data object ROUTE_MULTIPLE_INTENSITY_ANALYSIS : SplitImageRoute()
 
 }

@@ -3,11 +3,14 @@ package com.aican.tlcanalyzer.viewmodel.project
 import android.graphics.Rect
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.room.Transaction
 import com.aican.tlcanalyzer.data.database.project.entities.ContourData
 import com.aican.tlcanalyzer.data.database.project.entities.ContourPoint
 import com.aican.tlcanalyzer.data.database.project.entities.ContourType
+import com.aican.tlcanalyzer.data.database.project.entities.IntensityPlotData
 import com.aican.tlcanalyzer.data.database.project.entities.ManualContourDetails
 import com.aican.tlcanalyzer.data.repository.project.ContourRepository
+import com.aican.tlcanalyzer.data.repository.project.IntensityPlotRepository
 import com.aican.tlcanalyzer.data.repository.project.image_analysis.ImageAnalysisRepository
 import com.aican.tlcanalyzer.domain.model.graphs.GraphPoint
 import com.aican.tlcanalyzer.domain.states.graph.IntensityDataState
@@ -30,7 +33,8 @@ import javax.inject.Inject
 @HiltViewModel
 class ImageAnalysisViewModel @Inject constructor(
     private val imageAnalysisRepository: ImageAnalysisRepository,
-    private val contourRepository: ContourRepository
+    private val contourRepository: ContourRepository,
+    val intensityPlotRepository: IntensityPlotRepository
 ) : ViewModel() {
 
 
@@ -368,6 +372,19 @@ class ImageAnalysisViewModel @Inject constructor(
         }.getOrElse {
             IntensityDataState.Error("Failed to fetch intensity data")
         }
+    }
+
+    @Transaction
+    suspend fun saveIntensityData(imageId: String, graphPoints: List<GraphPoint>) {
+        val intensityEntities = graphPoints.map { point ->
+            IntensityPlotData(
+                imageId = imageId,
+                rf = point.x.toDouble(),
+                intensity = point.y.toDouble()
+            )
+        }
+        intensityPlotRepository.deleteAllIntensityPlotData(imageId)
+        intensityPlotRepository.insertIntensityPlotData(intensityEntities)
     }
 
 

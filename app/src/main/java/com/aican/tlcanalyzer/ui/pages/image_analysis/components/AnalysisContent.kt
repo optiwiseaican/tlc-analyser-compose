@@ -1,7 +1,6 @@
 package com.aican.tlcanalyzer.ui.pages.image_analysis.components
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -16,21 +15,18 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.aican.tlcanalyzer.data.database.project.entities.ContourData
 import com.aican.tlcanalyzer.data.database.project.entities.Image
 import com.aican.tlcanalyzer.domain.states.graph.IntensityDataState
 import com.aican.tlcanalyzer.domain.states.image.ImageState
 import com.aican.tlcanalyzer.ui.components.topbar_navigation.CustomTopBar
+import com.aican.tlcanalyzer.utils.AppUtils.buttonTextSize
 import com.github.mikephil.charting.data.Entry
 
 @Composable
@@ -174,7 +170,6 @@ fun AnalyserLayout(
 
         item {
             Spacer(modifier = Modifier.height(8.dp))
-            val textSize = 12.sp
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -190,7 +185,7 @@ fun AnalyserLayout(
                     Button(modifier = Modifier.fillMaxWidth(), onClick = {
                         onClearAll.invoke()
                     }) {
-                        Text(text = "Clear All", fontSize = textSize)
+                        Text(text = "Clear All", fontSize = buttonTextSize)
                     }
 
                     // Manage Spots Button
@@ -198,7 +193,7 @@ fun AnalyserLayout(
                         // TODO: Add logic to open a spot management dialog or screen
                         println("Manage Spots clicked")
                     }) {
-                        Text(text = "Manage Spots", fontSize = textSize)
+                        Text(text = "Manage Spots", fontSize = buttonTextSize)
                     }
                 }
 
@@ -211,7 +206,7 @@ fun AnalyserLayout(
                     Button(modifier = Modifier.fillMaxWidth(), onClick = {
                         removeOrEditSpotClick.invoke()
                     }) {
-                        Text(text = "Remove/Edit Spots", fontSize = textSize)
+                        Text(text = "Remove/Edit Spots", fontSize = buttonTextSize)
                     }
 
                     // Revert to Main Image Button
@@ -219,7 +214,7 @@ fun AnalyserLayout(
                         // TODO: Add logic to revert back to the main/original image
                         println("Revert to Main Image clicked")
                     }) {
-                        Text(text = "Revert to Main Image", fontSize = textSize)
+                        Text(text = "Revert to Main Image", fontSize = buttonTextSize)
                     }
                 }
             }

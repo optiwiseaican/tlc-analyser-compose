@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.util.Log
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.sp
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.FileOutputStream
@@ -23,6 +24,8 @@ object AppUtils {
 
     const val APP_NAME = "TLC Analyser"
     val UiColor1 = Color.Black
+    val buttonTextSize = 12.sp
+
 
     fun getColorByIndex(index: Int): String {
         val colorList = listOf(

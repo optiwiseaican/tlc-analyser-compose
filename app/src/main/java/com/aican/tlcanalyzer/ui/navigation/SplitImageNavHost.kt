@@ -16,8 +16,11 @@ import com.aican.tlcanalyzer.data.database.project.entities.ProjectDetails
 import com.aican.tlcanalyzer.ui.activities.NewCameraActivity
 import com.aican.tlcanalyzer.ui.activities.NewImageAnalysis
 import com.aican.tlcanalyzer.ui.pages.split_image_section.SplitImageScreen
+import com.aican.tlcanalyzer.ui.pages.split_image_section.multiple_image_anal.AnalyseMultiIntensityGraphScreen
+import com.aican.tlcanalyzer.ui.pages.split_image_section.multiple_image_anal.MultipleImageAnalysisScreen
 import com.aican.tlcanalyzer.viewmodel.project.ImageAnalysisViewModel
 import com.aican.tlcanalyzer.viewmodel.project.IntensityChartViewModel
+import com.aican.tlcanalyzer.viewmodel.project.MultipleImageAnalysisViewModel
 import com.aican.tlcanalyzer.viewmodel.project.ProjectViewModel
 
 @Composable
@@ -27,6 +30,7 @@ fun SplitImageNavHost(
     projectViewModel: ProjectViewModel,
     imageAnalysisViewModel: ImageAnalysisViewModel,
     intensityChartViewModel: IntensityChartViewModel,
+    multipleImageAnalysisViewModel: MultipleImageAnalysisViewModel,
     projectId: String,
     projectDescription: String,
     projectName: String,
@@ -84,8 +88,69 @@ fun SplitImageNavHost(
                     intent.putExtra("imageId", image.imageId)
                     context.startActivity(intent)
 //                    navController.navigate("${ImageAnalysisRoute.ROUTE_IMAGE_ANALYSIS}/$projectId?imageId=${image.imageId}")
+                },
+                multipleImageAnalysisViewModel = multipleImageAnalysisViewModel,
+                onMultipleImageAnalysisClick = {
+                    navController.navigate(SplitImageRoute.ROUTE_MULTIPLE_IMAGE_ANALYSIS)
+
                 }
             )
+        }
+
+        composable<SplitImageRoute.ROUTE_MULTIPLE_IMAGE_ANALYSIS>(
+            enterTransition = { fadeIn(tween(1000)) },
+            exitTransition = { fadeOut(tween(700)) },
+            popEnterTransition = {
+                slideIntoContainer(
+                    AnimatedContentTransitionScope.SlideDirection.End,
+                    tween(700)
+                )
+            },
+            popExitTransition = {
+                slideOutOfContainer(
+                    AnimatedContentTransitionScope.SlideDirection.Start,
+                    tween(700)
+                )
+            }
+
+        ) {
+            val context = LocalContext.current
+
+            MultipleImageAnalysisScreen(multipleImageAnalysisViewModel = multipleImageAnalysisViewModel,
+                onTimeVsAreaClick = {
+
+                },
+                onAnalyseIntensityGraphClick = {
+                    navController.navigate(SplitImageRoute.ROUTE_MULTIPLE_INTENSITY_ANALYSIS)
+
+                },
+                onGenerateClick = {
+
+                })
+
+        }
+
+        composable<SplitImageRoute.ROUTE_MULTIPLE_INTENSITY_ANALYSIS>(
+            enterTransition = { fadeIn(tween(1000)) },
+            exitTransition = { fadeOut(tween(700)) },
+            popEnterTransition = {
+                slideIntoContainer(
+                    AnimatedContentTransitionScope.SlideDirection.End,
+                    tween(700)
+                )
+            },
+            popExitTransition = {
+                slideOutOfContainer(
+                    AnimatedContentTransitionScope.SlideDirection.Start,
+                    tween(700)
+                )
+            }
+
+        ) {
+            val context = LocalContext.current
+
+            AnalyseMultiIntensityGraphScreen(multipleImageAnalysisViewModel = multipleImageAnalysisViewModel)
+
         }
     }
 
