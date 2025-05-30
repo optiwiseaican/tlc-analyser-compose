@@ -44,6 +44,7 @@ import com.aican.tlcanalyzer.ui.pages.image_analysis.components.AnalysisLoaders
 import com.aican.tlcanalyzer.ui.pages.image_analysis.components.IntensityDataSection
 import com.aican.tlcanalyzer.ui.pages.image_analysis.components.LineGraph
 import com.aican.tlcanalyzer.ui.pages.image_analysis.components.TableScreen
+import com.aican.tlcanalyzer.utils.AppUtils
 import com.aican.tlcanalyzer.utils.AppUtils.getColorByIndex
 import com.aican.tlcanalyzer.utils.SharedStates
 import com.aican.tlcanalyzer.viewmodel.project.ImageAnalysisViewModel
@@ -277,19 +278,37 @@ fun drawHighlightedRegions(
 
     val outputMat = inputMat.clone()
     val fullWidth = inputBitmap.width
+    val textColor = Scalar(0.0, 0.0, 255.0) // Red color for text
+    val color = Scalar(255.0, 0.0, 255.0) // Magenta color
 
     // 🔹 Iterate through marked regions and draw rectangles
-    markedRegions.forEach { region ->
-        val rfTop = (1 - region.right / totalParts) * inputBitmap.height
-        val rfBottom = (1 - region.left / totalParts) * inputBitmap.height
+    markedRegions.forEachIndexed { index, region ->
+        val rfTop = (1 - region.left.toDouble() / totalParts) * inputBitmap.height
+        val rfBottom = (1 - region.right.toDouble() / totalParts) * inputBitmap.height
 
-        val p1 = Point(0.0, rfBottom.toDouble()) // Full width, bottom
-        val p2 = Point(fullWidth.toDouble(), rfTop.toDouble()) // Full width, top
+        val p1 = Point(0.0, rfTop) // Full width, top
+        val p2 = Point(fullWidth.toDouble(), rfBottom) // Full width, bottom
 
-        val color = Scalar(255.0, 0.0, 255.0) // Magenta color
         val thickness = 2
 
         Imgproc.rectangle(outputMat, p1, p2, color, thickness)
+
+        // **Place text on the left side above the top boundary**
+        val textX = 10.0 // Left margin
+        val textYOffset = 10.0 // Offset to move text above the rectangle
+        val textY = maxOf(rfTop - textYOffset, 20.0) // Ensure text is not too high
+
+        Imgproc.putText(
+            outputMat,
+            if (region.name == "") "C_${index + 1}" else {
+                region.name
+            }, // Contour label
+            Point(textX, textY), // Adjusted position (left-aligned)
+            Imgproc.FONT_HERSHEY_SIMPLEX, // Font type
+            0.4, // Font scale
+            textColor, // Text color
+            2 // Thickness
+        )
     }
 
     // Convert back to Bitmap
@@ -429,13 +448,21 @@ fun LineGraphWithTap(
 
             // ✅ Shaded regions using `MarkedRegion`
             val shadedDataSets = mutableListOf<LineDataSet>()
-            markedRegions.forEach { region ->
+            markedRegions.forEachIndexed { index, region ->
                 val shadedRegion = intensityData.filter { it.x in region.left..region.right }
                 val shadedDataSet = LineDataSet(shadedRegion, "Shaded Region").apply {
                     setDrawCircles(false)
-                    color = android.graphics.Color.MAGENTA
+                    color = android.graphics.Color.parseColor(
+                        AppUtils.getLightColorByIndex(
+                            index
+                        )
+                    )
                     setDrawFilled(true)
-                    fillColor = android.graphics.Color.MAGENTA
+                    fillColor = android.graphics.Color.parseColor(
+                        AppUtils.getLightColorByIndex(
+                            index
+                        )
+                    )
                     mode = LineDataSet.Mode.HORIZONTAL_BEZIER
                     lineWidth = 0f
                 }

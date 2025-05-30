@@ -22,35 +22,94 @@ object AppUtils {
 
     var retake = false
 
+    var SPOT_DETECTION_TYPE = "spot"
+    var BAND_DETECTION_TYPE = "band"
+
     const val APP_NAME = "TLC Analyser"
     val UiColor1 = Color.Black
     val buttonTextSize = 12.sp
 
 
+    private val baseColors = listOf(
+        "#E53935", // Red
+        "#43A047", // Green
+        "#1E88E5", // Blue
+        "#FBC02D", // Yellow
+        "#8E24AA", // Purple
+        "#00ACC1", // Cyan
+        "#6D4C41", // Brown
+        "#F57C00", // Orange
+        "#7B1FA2", // Dark Purple
+        "#C2185B", // Pink
+        "#757575", // Gray
+        "#D81B60", // Magenta
+        "#4CAF50", // Mid Green
+        "#00897B", // Teal
+        "#5E35B1", // Indigo
+        "#F4511E", // Deep Orange
+        "#546E7A", // Blue Gray
+        "#3949AB", // Deep Blue
+        "#8D6E63", // Taupe
+        "#009688"  // Dark Turquoise
+    )
+
+    private val darkColors = listOf(
+        "#B71C1C", // Dark Red
+        "#1B5E20", // Dark Green
+        "#0D47A1", // Dark Blue
+        "#F57F17", // Dark Yellow
+        "#4A148C", // Dark Purple
+        "#006064", // Dark Cyan
+        "#3E2723", // Dark Brown
+        "#E65100", // Dark Orange
+        "#4A0072", // Dark Violet
+        "#880E4F", // Dark Pink
+        "#424242", // Dark Gray
+        "#AD1457", // Dark Magenta
+        "#2E7D32", // Dark Mid Green
+        "#004D40", // Dark Teal
+        "#311B92", // Dark Indigo
+        "#BF360C", // Dark Deep Orange
+        "#37474F", // Dark Blue Gray
+        "#1A237E", // Dark Deep Blue
+        "#5D4037", // Dark Taupe
+        "#00796B"  // Dark Dark Turquoise
+    )
+
+    private val lightColors = listOf(
+        "#E57373", // Slightly Darker Light Red
+        "#81C784", // Slightly Darker Light Green
+        "#64B5F6", // Slightly Darker Light Blue
+        "#FFD54F", // Slightly Darker Light Yellow
+        "#BA68C8", // Slightly Darker Light Purple
+        "#4DD0E1", // Slightly Darker Light Cyan
+        "#A1887F", // Slightly Darker Light Brown
+        "#FFB74D", // Slightly Darker Light Orange
+        "#CE93D8", // Slightly Darker Light Violet
+        "#F06292", // Slightly Darker Light Pink
+        "#9E9E9E", // Slightly Darker Light Gray
+        "#EC407A", // Slightly Darker Light Magenta
+        "#A5D6A7", // Slightly Darker Light Mid Green
+        "#80CBC4", // Slightly Darker Light Teal
+        "#B39DDB", // Slightly Darker Light Indigo
+        "#FF8A65", // Slightly Darker Light Deep Orange
+        "#B0BEC5", // Slightly Darker Light Blue Gray
+        "#7986CB", // Slightly Darker Light Deep Blue
+        "#A1887F", // Slightly Darker Light Taupe
+        "#80DEEA"  // Slightly Darker Light Dark Turquoise
+    )
+
+
     fun getColorByIndex(index: Int): String {
-        val colorList = listOf(
-            "#FF0000", // Red
-            "#00FF00", // Green
-            "#0000FF", // Blue
-            "#FFFF00", // Yellow
-            "#FF00FF", // Magenta
-            "#00FFFF", // Cyan
-            "#800000", // Maroon
-            "#808000", // Olive
-            "#008000", // Dark Green
-            "#800080", // Purple
-            "#808080", // Gray
-            "#FFA500", // Orange
-            "#A52A2A", // Brown
-            "#8A2BE2", // Blue Violet
-            "#5F9EA0", // Cadet Blue
-            "#7FFF00", // Chartreuse
-            "#D2691E", // Chocolate
-            "#6495ED", // Cornflower Blue
-            "#DC143C", // Crimson
-            "#00CED1"  // Dark Turquoise
-        )
-        return colorList[index % colorList.size] // Cycle through colors if index exceeds the list
+        return baseColors[index % baseColors.size]
+    }
+
+    fun getDarkColorByIndex(index: Int): String {
+        return darkColors[index % darkColors.size]
+    }
+
+    fun getLightColorByIndex(index: Int): String {
+        return lightColors[index % lightColors.size]
     }
 
 

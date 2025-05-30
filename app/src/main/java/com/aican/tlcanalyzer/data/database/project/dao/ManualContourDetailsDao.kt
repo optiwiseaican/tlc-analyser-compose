@@ -1,4 +1,5 @@
 package com.aican.tlcanalyzer.data.database.project.dao
+
 import androidx.room.*
 import com.aican.tlcanalyzer.data.database.project.entities.ManualContourDetails
 import kotlinx.coroutines.flow.Flow
@@ -44,4 +45,7 @@ interface ManualContourDetailsDao {
     """
     )
     suspend fun getManualDetailsByImageId(imageId: String): List<ManualContourDetails>
+
+    @Query("SELECT * FROM ManualContourDetails WHERE contourId = :contourId")
+    suspend fun getManualContourDetailByContourId(contourId: String): ManualContourDetails?
 }

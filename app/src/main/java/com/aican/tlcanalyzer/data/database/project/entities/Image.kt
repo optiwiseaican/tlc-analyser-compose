@@ -30,7 +30,11 @@ data class Image(
     val description: String,
     @ColumnInfo(name = "projectId") val projectId: String,
     val imageType: ImageType,
-    val parentImageId: String? = null // Null for MAIN images
+    val parentImageId: String? = null, // Null for MAIN images
+    val rm: String? = null,
+    val finalSpot: String? = null,
+    val hour: String? = null,
+    val detectionType: String? = null
 )
 
 

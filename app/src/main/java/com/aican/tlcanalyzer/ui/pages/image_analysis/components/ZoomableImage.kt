@@ -1,5 +1,6 @@
 package com.aican.tlcanalyzer.ui.pages.image_analysis.components
 
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -50,6 +51,7 @@ import java.io.File
 fun ZoomableImage(
     imagePath: String,
     description: String,
+    imageBitmap: Bitmap? = null,
     recomposeKey: Int, // Pass a unique key to force recomposition
     visibility: Boolean = true,
     zoomable: Boolean
@@ -83,20 +85,12 @@ fun ZoomableImage(
                         }
                     }) {
                     if (isImageReady) {
-                        val imageFile = File(imagePath)
-                        val uniqueImagePath = "$imagePath?timestamp=${System.currentTimeMillis()}"
-                        val bitmap = BitmapFactory.decodeFile(imageFile.path)
-
-                        if (bitmap != null) {
-                            println("Bitmap is not null for path: $uniqueImagePath")
-                        }
-
-                        if (imageFile.exists()) {
-                            println("ZoomableImage recomposed with recomposeKey: $recomposeKey")
+                        if (imageBitmap != null) {
+                            println("imageBitmap is not null at ZoomableImage")
                             AsyncImage(
                                 model = ImageRequest.Builder(LocalContext.current)
-                                    .data(uniqueImagePath.toUri()) // Use a unique key to bypass cache
-                                    .memoryCacheKey(uniqueImagePath) // Optional custom cache key
+                                    .data(imageBitmap) // Use a unique key to bypass cache
+                                    .memoryCacheKey(imageBitmap.toString()) // Optional custom cache key
                                     .diskCachePolicy(CachePolicy.DISABLED) // Disable disk cache
                                     .memoryCachePolicy(CachePolicy.DISABLED) // Disable memory cache
                                     .build(),
@@ -111,15 +105,46 @@ fun ZoomableImage(
                                     )
                             )
                         } else {
-                            println("Image file does not exist: $imagePath")
-                            Image(
-                                modifier = Modifier.fillMaxSize(),
-                                painter = painterResource(id = R.drawable.baseline_warning_24),
-                                contentDescription = "Image Not Found"
-                            )
+                            val imageFile = File(imagePath)
+                            val uniqueImagePath =
+                                "$imagePath?timestamp=${System.currentTimeMillis()}"
+//                            var bitmap = BitmapFactory.decodeFile(imageFile.path)
+//
+//
+//                            if (bitmap != null) {
+//                                println("Bitmap is not null for path: $uniqueImagePath")
+//                            }
+
+                            if (imageFile.exists()) {
+                                println("ZoomableImage recomposed with recomposeKey: $recomposeKey")
+                                AsyncImage(
+                                    model = ImageRequest.Builder(LocalContext.current)
+                                        .data(uniqueImagePath.toUri()) // Use a unique key to bypass cache
+                                        .memoryCacheKey(uniqueImagePath) // Optional custom cache key
+                                        .diskCachePolicy(CachePolicy.DISABLED) // Disable disk cache
+                                        .memoryCachePolicy(CachePolicy.DISABLED) // Disable memory cache
+                                        .build(),
+                                    contentDescription = description,
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .graphicsLayer(
+                                            scaleX = scale.floatValue,
+                                            scaleY = scale.floatValue,
+                                            rotationZ = rotationState.floatValue,
+                                            transformOrigin = TransformOrigin.Center
+                                        )
+                                )
+                            } else {
+                                println("Image file does not exist: $imagePath")
+                                Image(
+                                    modifier = Modifier.fillMaxSize(),
+                                    painter = painterResource(id = R.drawable.baseline_warning_24),
+                                    contentDescription = "Image Not Found"
+                                )
+                            }
                         }
-                    }
-                    else {
+
+                    } else {
                         // Placeholder while the image is being delayed
                         Box(
                             modifier = Modifier
@@ -132,32 +157,25 @@ fun ZoomableImage(
                     }
                 }
             }
-        }
-        else{
+        } else {
 
 
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
             ) {
-                Box(modifier = Modifier
-                    .height(500.dp)
-                    .clip(RectangleShape)) {
+                Box(
+                    modifier = Modifier
+                        .height(500.dp)
+                        .clip(RectangleShape)
+                ) {
                     if (isImageReady) {
-                        val imageFile = File(imagePath)
-                        val uniqueImagePath = "$imagePath?timestamp=${System.currentTimeMillis()}"
-                        val bitmap = BitmapFactory.decodeFile(imageFile.path)
-
-                        if (bitmap != null) {
-                            println("Bitmap is not null for path: $uniqueImagePath")
-                        }
-
-                        if (imageFile.exists()) {
-                            println("ZoomableImage recomposed with recomposeKey: $recomposeKey")
+                        if (imageBitmap != null) {
+                            println("imageBitmap is not null at ZoomableImage")
                             AsyncImage(
                                 model = ImageRequest.Builder(LocalContext.current)
-                                    .data(uniqueImagePath.toUri()) // Use a unique key to bypass cache
-                                    .memoryCacheKey(uniqueImagePath) // Optional custom cache key
+                                    .data(imageBitmap) // Use a unique key to bypass cache
+                                    .memoryCacheKey(imageBitmap.toString()) // Optional custom cache key
                                     .diskCachePolicy(CachePolicy.DISABLED) // Disable disk cache
                                     .memoryCachePolicy(CachePolicy.DISABLED) // Disable memory cache
                                     .build(),
@@ -170,18 +188,47 @@ fun ZoomableImage(
                                         rotationZ = rotationState.floatValue,
                                         transformOrigin = TransformOrigin.Center
                                     )
-
                             )
                         } else {
-                            println("Image file does not exist: $imagePath")
-                            Image(
-                                modifier = Modifier.fillMaxSize(),
-                                painter = painterResource(id = R.drawable.baseline_warning_24),
-                                contentDescription = "Image Not Found"
-                            )
+                            val imageFile = File(imagePath)
+                            val uniqueImagePath =
+                                "$imagePath?timestamp=${System.currentTimeMillis()}"
+                            val bitmap = BitmapFactory.decodeFile(imageFile.path)
+
+                            if (bitmap != null) {
+                                println("Bitmap is not null for path: $uniqueImagePath")
+                            }
+
+                            if (imageFile.exists()) {
+                                println("ZoomableImage recomposed with recomposeKey: $recomposeKey")
+                                AsyncImage(
+                                    model = ImageRequest.Builder(LocalContext.current)
+                                        .data(uniqueImagePath.toUri()) // Use a unique key to bypass cache
+                                        .memoryCacheKey(uniqueImagePath) // Optional custom cache key
+                                        .diskCachePolicy(CachePolicy.DISABLED) // Disable disk cache
+                                        .memoryCachePolicy(CachePolicy.DISABLED) // Disable memory cache
+                                        .build(),
+                                    contentDescription = description,
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .graphicsLayer(
+                                            scaleX = scale.floatValue,
+                                            scaleY = scale.floatValue,
+                                            rotationZ = rotationState.floatValue,
+                                            transformOrigin = TransformOrigin.Center
+                                        )
+
+                                )
+                            } else {
+                                println("Image file does not exist: $imagePath")
+                                Image(
+                                    modifier = Modifier.fillMaxSize(),
+                                    painter = painterResource(id = R.drawable.baseline_warning_24),
+                                    contentDescription = "Image Not Found"
+                                )
+                            }
                         }
-                    }
-                    else {
+                    } else {
                         // Placeholder while the image is being delayed
                         Box(
                             modifier = Modifier
@@ -217,7 +264,6 @@ fun ZoomableImage1(imagePath: String, description: String, visibility: Boolean =
                     modifier = Modifier
                         .fillMaxSize()
                         .rotate(90f)
-
                 )
             } else {
                 Image(

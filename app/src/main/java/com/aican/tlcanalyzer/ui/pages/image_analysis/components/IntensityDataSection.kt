@@ -12,6 +12,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.aican.tlcanalyzer.data.database.project.entities.ContourData
 import com.aican.tlcanalyzer.domain.states.graph.IntensityDataState
+import com.aican.tlcanalyzer.utils.AppUtils
 import com.aican.tlcanalyzer.utils.AppUtils.getColorByIndex
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.components.LimitLine
@@ -24,7 +25,8 @@ import java.util.Collections
 @Composable
 fun IntensityDataSection(
     parts: Int,
-    intensityDataState: IntensityDataState, lineChartData: List<Entry>,
+    intensityDataState: IntensityDataState,
+    lineChartData: List<Entry>,
     contourDataList: List<ContourData>,
     onBitmapCaptured: (Bitmap?) -> Unit
 
@@ -129,7 +131,9 @@ fun LineGraph(
             contourDataList.forEachIndexed { index, contour ->
                 var rfTop = contour.rfTop.toFloatOrNull()
                 var rfBottom = contour.rfBottom.toFloatOrNull()
-                val regionColor = getColorByIndex(index)
+                val regionColor = AppUtils.getLightColorByIndex(
+                    index
+                )
                 if (rfTop != null && rfBottom != null) {
                     rfTop *= parts
                     rfBottom *= parts

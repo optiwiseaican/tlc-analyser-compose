@@ -167,7 +167,7 @@ class NewCameraActivity : ComponentActivity() {
                 val cameraProvider = cameraProviderFuture.get()
 
                 val preview = Preview.Builder().build().apply {
-                    setSurfaceProvider(binding.viewFinder.surfaceProvider)
+                    surfaceProvider = binding.viewFinder.surfaceProvider
                 }
 
                 imageCapture = ImageCapture.Builder()

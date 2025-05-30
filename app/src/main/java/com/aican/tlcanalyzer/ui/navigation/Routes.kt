@@ -69,4 +69,7 @@ sealed class SplitImageRoute {
     @Serializable
     data object ROUTE_MULTIPLE_INTENSITY_ANALYSIS : SplitImageRoute()
 
+    @Serializable
+    data object ROUTE_MUTIPLE_REPORT : SplitImageRoute()
+
 }

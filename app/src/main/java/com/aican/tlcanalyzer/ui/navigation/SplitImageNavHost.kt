@@ -17,6 +17,7 @@ import com.aican.tlcanalyzer.ui.activities.NewCameraActivity
 import com.aican.tlcanalyzer.ui.activities.NewImageAnalysis
 import com.aican.tlcanalyzer.ui.pages.split_image_section.SplitImageScreen
 import com.aican.tlcanalyzer.ui.pages.split_image_section.multiple_image_anal.AnalyseMultiIntensityGraphScreen
+import com.aican.tlcanalyzer.ui.pages.split_image_section.multiple_image_anal.MultipleGenerateReport
 import com.aican.tlcanalyzer.ui.pages.split_image_section.multiple_image_anal.MultipleImageAnalysisScreen
 import com.aican.tlcanalyzer.viewmodel.project.ImageAnalysisViewModel
 import com.aican.tlcanalyzer.viewmodel.project.IntensityChartViewModel
@@ -125,7 +126,7 @@ fun SplitImageNavHost(
 
                 },
                 onGenerateClick = {
-
+                    navController.navigate(SplitImageRoute.ROUTE_MUTIPLE_REPORT)
                 })
 
         }
@@ -150,6 +151,31 @@ fun SplitImageNavHost(
             val context = LocalContext.current
 
             AnalyseMultiIntensityGraphScreen(multipleImageAnalysisViewModel = multipleImageAnalysisViewModel)
+
+        }
+        composable<SplitImageRoute.ROUTE_MUTIPLE_REPORT>(
+            enterTransition = { fadeIn(tween(1000)) },
+            exitTransition = { fadeOut(tween(700)) },
+            popEnterTransition = {
+                slideIntoContainer(
+                    AnimatedContentTransitionScope.SlideDirection.End,
+                    tween(700)
+                )
+            },
+            popExitTransition = {
+                slideOutOfContainer(
+                    AnimatedContentTransitionScope.SlideDirection.Start,
+                    tween(700)
+                )
+            }
+
+        ) {
+            val context = LocalContext.current
+
+            MultipleGenerateReport(
+                multipleImageAnalysisViewModel = multipleImageAnalysisViewModel,
+                projectViewModel = projectViewModel
+            )
 
         }
     }

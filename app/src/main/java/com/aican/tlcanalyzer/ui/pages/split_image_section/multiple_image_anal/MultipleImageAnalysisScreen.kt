@@ -1,5 +1,8 @@
 package com.aican.tlcanalyzer.ui.pages.split_image_section.multiple_image_anal
 
+import android.content.Intent
+import android.net.Uri
+import android.util.Log
 import android.view.ViewGroup
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -25,14 +28,18 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.aican.tlcanalyzer.data.database.project.entities.IntensityPlotData
+import com.aican.tlcanalyzer.domain.model.multiple_analysis.HrVsAreaPer
 import com.aican.tlcanalyzer.domain.model.multiple_analysis.ImageAnalysisData
+import com.aican.tlcanalyzer.ui.activities.TimeVsAreaGraph
 import com.aican.tlcanalyzer.utils.AppUtils.buttonTextSize
 import com.aican.tlcanalyzer.utils.AppUtils.getColorByIndex
+import com.aican.tlcanalyzer.utils.SharedData
 import com.aican.tlcanalyzer.viewmodel.project.MultipleImageAnalysisViewModel
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.components.XAxis
@@ -41,6 +48,9 @@ import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.interfaces.datasets.ILineDataSet
 import com.github.mikephil.charting.utils.ColorTemplate
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
 
 @Composable
 fun MultipleImageAnalysisScreen(
@@ -52,7 +62,59 @@ fun MultipleImageAnalysisScreen(
 ) {
     val imageAnalysisData by multipleImageAnalysisViewModel.imageAnalysisDataList.collectAsState()
 
+    fun timeVsArea() {
+        // Clear previous data
+        SharedData.hrVsAreaPerArrayListRM = emptyList()
+        SharedData.hrVsAreaPerArrayListFinal = emptyList()
 
+        val hrVsAreaPerArrayRM = mutableListOf<HrVsAreaPer>()
+        val hrVsAreaPerArrayFinal = mutableListOf<HrVsAreaPer>()
+
+        if (imageAnalysisData.isNotEmpty()) {
+            for (imageData in imageAnalysisData) {
+                val contours = imageData.contourData // List of contour data for this image
+                val hr = imageData.hour?.toFloatOrNull() ?: continue // Get Hour
+
+                if (contours.isNotEmpty()) {
+                    var totalArea = 0f
+                    var rmArea = 0f
+                    var finalArea = 0f
+
+                    // Calculate total area
+                    for (contour in contours) {
+                        totalArea += contour.area.toFloat()
+                    }
+
+                    // Find RM and Final Spot Area
+                    for (contour in contours) {
+                        if (contour.contourId == imageData.rm) {
+                            rmArea = contour.area.toFloat()
+                        }
+                        if (contour.contourId == imageData.final) {
+                            finalArea = contour.area.toFloat()
+                        }
+                    }
+
+                    // Calculate % area
+                    val rmAreaPercent = if (totalArea > 0) (rmArea / totalArea) * 100 else 0f
+                    val finalPercent = if (totalArea > 0) (finalArea / totalArea) * 100 else 0f
+
+                    // Store the calculated values
+                    hrVsAreaPerArrayRM.add(HrVsAreaPer(hr, rmAreaPercent))
+                    hrVsAreaPerArrayFinal.add(HrVsAreaPer(hr, finalPercent))
+                }
+            }
+
+            // Assign calculated values to shared data for graph plotting
+            SharedData.hrVsAreaPerArrayListRM = hrVsAreaPerArrayRM
+            SharedData.hrVsAreaPerArrayListFinal = hrVsAreaPerArrayFinal
+        }
+    }
+
+    fun generateReport() {
+    }
+
+    val context = LocalContext.current
 
     if (imageAnalysisData.isNotEmpty()) {
         MultipleImageAnalysisContent(
@@ -60,7 +122,11 @@ fun MultipleImageAnalysisScreen(
             imageAnalysisData = imageAnalysisData,
             onGenerateClick = onGenerateClick,
             onAnalyseIntensityGraphClick = onAnalyseIntensityGraphClick,
-            onTimeVsAreaClick = onTimeVsAreaClick
+            onTimeVsAreaClick = {
+                timeVsArea()
+                val intent = Intent(context, TimeVsAreaGraph::class.java)
+                context.startActivity(intent)
+            }
         )
     } else {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -68,6 +134,8 @@ fun MultipleImageAnalysisScreen(
         }
     }
 }
+
+
 
 @Composable
 fun MultipleImageAnalysisContent(

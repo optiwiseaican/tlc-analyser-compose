@@ -22,7 +22,12 @@
         android:theme="@style/Theme.AppCompat.Light"
         android:usesCleartextTraffic="true"
         tools:targetApi="31">
-
+        <activity
+            android:name=".ui.activities.TimeVsAreaGraph"
+            android:exported="false" />
+        <activity
+            android:name=".ui.activities.EditRectangleContour"
+            android:exported="false" />
         <activity
             android:name=".ui.activities.SplitImageActivity"
             android:exported="false"

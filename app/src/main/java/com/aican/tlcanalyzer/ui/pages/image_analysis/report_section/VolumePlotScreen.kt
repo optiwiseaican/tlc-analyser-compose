@@ -21,6 +21,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import com.aican.tlcanalyzer.data.database.project.entities.ContourData
 import com.aican.tlcanalyzer.ui.components.topbar_navigation.CustomTopBar
 import com.aican.tlcanalyzer.ui.pages.image_analysis.components.TableScreen
+import com.aican.tlcanalyzer.utils.AppUtils
 import com.aican.tlcanalyzer.utils.AppUtils.getColorByIndex
 import com.github.mikephil.charting.charts.BarChart
 import com.github.mikephil.charting.data.BarData
@@ -127,7 +128,9 @@ fun BarGraph(
 
             // Assign different colors based on index
             val colors = contourDataList.mapIndexed { index, _ ->
-                getColorByIndex(index)
+                AppUtils.getLightColorByIndex(
+                    index
+                )
             }
             barDataSet.colors = colors.map { android.graphics.Color.parseColor(it) }
 

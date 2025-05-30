@@ -19,6 +19,9 @@ class ContourRepository @Inject constructor(
     suspend fun nukeContourDataTable() = contourDataDao.nukeTable()
     suspend fun nukeContourPointsTable() = contourPointDao.nukeTable()
 
+    suspend fun getManualContourDetailByContourId(contourId: String) =
+        manualContourDetailsDao.getManualContourDetailByContourId(contourId)
+
     @Transaction
     suspend fun clearAllContours(imageId: String) {
         // get all contours by imageId

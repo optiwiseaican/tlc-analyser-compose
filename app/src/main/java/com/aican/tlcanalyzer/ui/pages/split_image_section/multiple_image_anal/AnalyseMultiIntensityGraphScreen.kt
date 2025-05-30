@@ -16,6 +16,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.aican.tlcanalyzer.domain.model.multiple_analysis.ImageAnalysisData
+import com.aican.tlcanalyzer.utils.AppUtils
 import com.aican.tlcanalyzer.utils.AppUtils.getColorByIndex
 import com.aican.tlcanalyzer.viewmodel.project.MultipleImageAnalysisViewModel
 import com.github.mikephil.charting.charts.LineChart
@@ -115,7 +116,9 @@ fun generateMultiImageLineData(imageAnalysisData: List<ImageAnalysisData>, parts
         imageData.contourData.forEachIndexed { i, contour ->
             var rfTop = contour.rfTop.toFloatOrNull()
             var rfBottom = contour.rfBottom.toFloatOrNull()
-            val regionColor = getColorByIndex(index + i)
+            val regionColor =  AppUtils.getLightColorByIndex(
+                index + i
+            )
 
             if (rfTop != null && rfBottom != null) {
                 rfTop *= parts

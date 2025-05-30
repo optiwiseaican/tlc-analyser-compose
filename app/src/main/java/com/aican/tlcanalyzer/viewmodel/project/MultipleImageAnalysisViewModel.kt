@@ -1,5 +1,7 @@
 package com.aican.tlcanalyzer.viewmodel.project
 
+import android.net.Uri
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import com.aican.tlcanalyzer.data.database.project.entities.ContourData
 import com.aican.tlcanalyzer.data.database.project.entities.IntensityPlotData
@@ -10,6 +12,7 @@ import com.aican.tlcanalyzer.domain.model.multiple_analysis.ImageAnalysisData
 import com.aican.tlcanalyzer.domain.model.multiple_analysis.SelectedImage
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.withContext
@@ -21,6 +24,7 @@ class MultipleImageAnalysisViewModel @Inject constructor(
     private val contourRepository: ContourRepository,
     val intensityPlotRepository: IntensityPlotRepository
 ) : ViewModel() {
+
 
     private val _imageAnalysisDataList: MutableStateFlow<List<ImageAnalysisData>> =
         MutableStateFlow(emptyList())
@@ -41,10 +45,14 @@ class MultipleImageAnalysisViewModel @Inject constructor(
 
                 imageAnalysisDataList.add(
                     ImageAnalysisData(
-                        selectedImage.imageId,
-                        selectedImage.imageName,
-                        intensityData,
-                        allContours
+                        imageId = selectedImage.imageId,
+                        imageName = selectedImage.imageName,
+                        rm = selectedImage.rm,
+                        final = selectedImage.final,
+                        hour = selectedImage.hour,
+                        intensityData = intensityData,
+                        contourData = allContours,
+                        imageDetail = selectedImage.imageDetail
                     )
                 )
             }
@@ -56,6 +64,20 @@ class MultipleImageAnalysisViewModel @Inject constructor(
     suspend fun doesIntensityPlotExist(imageId: String): Boolean =
         intensityPlotRepository.doesIntensityPlotExist(imageId)
 
+    private val _selectedImages = MutableStateFlow<Set<SelectedImage>>(emptySet())
+    val selectedImages: StateFlow<Set<SelectedImage>> get() = _selectedImages
+
+    fun selectImage(image: SelectedImage, isSelected: Boolean) {
+        _selectedImages.value = if (isSelected) {
+            _selectedImages.value + image
+        } else {
+            _selectedImages.value - image
+        }
+    }
+
+    fun clearSelection() {
+        _selectedImages.value = emptySet()
+    }
 
 }
 

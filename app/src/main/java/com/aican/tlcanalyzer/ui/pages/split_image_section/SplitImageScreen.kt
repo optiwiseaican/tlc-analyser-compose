@@ -2,6 +2,7 @@ package com.aican.tlcanalyzer.ui.pages.split_image_section
 
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -14,11 +15,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.*
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
@@ -61,7 +61,7 @@ fun SplitImageScreen(
 
     var mainImages by remember { mutableStateOf<List<Image>>(emptyList()) }
     var splitImages by remember { mutableStateOf<List<Image>>(emptyList()) }
-    var selectedImages by rememberSaveable { mutableStateOf(setOf<SelectedImage>()) }
+    val selectedImages by multipleImageAnalysisViewModel.selectedImages.collectAsState()
     var isSelectionMode by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(projectId) {
@@ -73,7 +73,7 @@ fun SplitImageScreen(
 
     BackHandler(enabled = isSelectionMode) {
         if (selectedImages.isNotEmpty()) {
-            selectedImages = emptySet()
+            multipleImageAnalysisViewModel.clearSelection()
             isSelectionMode = false
         } else {
             onBackClick()
@@ -105,11 +105,7 @@ fun SplitImageScreen(
                     containerColor = AppUtils.UiColor1,
                     text = { Text("Analyse", color = Color.White) },
                     icon = {
-                        Icon(
-                            Icons.Filled.Check,
-                            contentDescription = "",
-                            tint = Color.White
-                        )
+                        Icon(Icons.Filled.Check, contentDescription = "", tint = Color.White)
                     },
                     onClick = {
                         multipleImageAnalysisViewModel.viewModelScope.launch {
@@ -118,19 +114,16 @@ fun SplitImageScreen(
                             }
 
                             if (validSelections.isEmpty()) {
-                                Toast
-                                    .makeText(
-                                        context,
-                                        "No valid selections with existing intensity plots",
-                                        Toast.LENGTH_SHORT
-                                    )
-                                    .show()
+                                Toast.makeText(
+                                    context,
+                                    "No valid selections with existing intensity plots",
+                                    Toast.LENGTH_SHORT
+                                ).show()
                             } else {
                                 multipleImageAnalysisViewModel.fetchImageAnalysisData(
                                     validSelections
                                 )
                                 onMultipleImageAnalysisClick.invoke()
-                                println("Selected Image IDs: ${validSelections.joinToString(", ") { it.imageId }}")
                             }
                         }
                     }
@@ -146,48 +139,32 @@ fun SplitImageScreen(
             isSelectionMode = isSelectionMode,
             multipleImageAnalysisViewModel = multipleImageAnalysisViewModel,
             onImageSelected = { image, isSelected ->
-                multipleImageAnalysisViewModel.viewModelScope.launch {
-                    if (multipleImageAnalysisViewModel.doesIntensityPlotExist(image.imageId)) {
-                        selectedImages = if (isSelected) {
-                            selectedImages + SelectedImage(image.imageId, image.name)
-                        } else {
-                            selectedImages - SelectedImage(image.imageId, image.name)
-                        }
-
-                        isSelectionMode = selectedImages.isNotEmpty()
-                    } else {
-                        Toast
-                            .makeText(
-                                context,
-                                "Intensity Plot Not Exist for ${image.name}",
-                                Toast.LENGTH_SHORT
-                            )
-                            .show()
-                    }
-                }
+                multipleImageAnalysisViewModel.selectImage(
+                    SelectedImage(
+                        image.imageId, image.name, image.hour, image.rm, image.finalSpot,
+                        imageDetail = image
+                    ),
+                    isSelected
+                )
+                isSelectionMode = selectedImages.isNotEmpty()
             },
             onLongPress = { image ->
-                multipleImageAnalysisViewModel.viewModelScope.launch {
-                    if (multipleImageAnalysisViewModel.doesIntensityPlotExist(image.imageId)) {
-                        isSelectionMode = true
-                        selectedImages = selectedImages + SelectedImage(image.imageId, image.name)
-                    } else {
-                        Toast
-                            .makeText(
-                                context,
-                                "Intensity Plot Not Exist for ${image.name}",
-                                Toast.LENGTH_SHORT
-                            )
-                            .show()
-                    }
-                }
+                multipleImageAnalysisViewModel.selectImage(
+                    SelectedImage(
+                        image.imageId, image.name, image.hour, image.rm, image.finalSpot,
+                        imageDetail = image
+                    ),
+                    true
+                )
+                isSelectionMode = true
             },
             onClearSelection = {
-                selectedImages = emptySet()
+                multipleImageAnalysisViewModel.clearSelection()
                 isSelectionMode = false
             },
             onAddMainImageClick = onAddMainImageClick,
             onMainImageClick = onMainImageClick,
+            projectViewModel = projectViewModel,
             onSplitImageClick = onSplitImageClick
         )
     }
@@ -198,6 +175,7 @@ fun SplitImageScreen(
 fun ProjectDetailScreen(
     modifier: Modifier = Modifier,
     multipleImageAnalysisViewModel: MultipleImageAnalysisViewModel,
+    projectViewModel: ProjectViewModel,
     mainImages: List<Image>,
     splitImages: List<Image>,
     selectedImages: Set<SelectedImage>,
@@ -217,7 +195,7 @@ fun ProjectDetailScreen(
         if (mainImages.isNotEmpty()) {
             Text(
                 text = "Main Images",
-                fontSize = 18.sp,
+                fontSize = MaterialTheme.typography.titleMedium.fontSize,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(bottom = 8.dp)
             )
@@ -228,21 +206,23 @@ fun ProjectDetailScreen(
                 contentPadding = PaddingValues(bottom = 16.dp)
             ) {
                 items(mainImages) { image ->
-                    ImageItem(
+                    MainImageItem(
                         image = image,
                         isSelected = selectedImages.contains(
                             SelectedImage(
-                                image.imageId,
-                                image.name
+                                imageId = image.imageId,
+                                imageName = image.name,
+                                hour = image.hour,
+                                rm = image.rm,
+                                final = image.finalSpot,
+                                imageDetail = image
                             )
                         ),
                         multipleImageAnalysisViewModel = multipleImageAnalysisViewModel,
                         isSelectionMode = isSelectionMode,
                         onClick = { onMainImageClick(image) },
                         onLongClick = { onLongPress(image) },
-                        onCheckboxClick = { isSelected ->
-                            onImageSelected(image, isSelected)
-                        }
+                        onCheckboxClick = { isSelected -> onImageSelected(image, isSelected) }
                     )
                 }
             }
@@ -253,7 +233,7 @@ fun ProjectDetailScreen(
         if (splitImages.isNotEmpty()) {
             Text(
                 text = "Split Images",
-                fontSize = 18.sp,
+                fontSize = MaterialTheme.typography.titleMedium.fontSize,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(bottom = 8.dp)
             )
@@ -264,17 +244,21 @@ fun ProjectDetailScreen(
                         image = image,
                         isSelected = selectedImages.contains(
                             SelectedImage(
-                                image.imageId,
-                                image.name
+                                imageId = image.imageId,
+                                imageName = image.name,
+                                hour = image.hour,
+                                rm = image.rm,
+                                final = image.finalSpot,
+                                imageDetail = image
+
                             )
                         ),
                         multipleImageAnalysisViewModel = multipleImageAnalysisViewModel,
+                        projectViewModel = projectViewModel,
                         isSelectionMode = isSelectionMode,
                         onClick = { onSplitImageClick(image) },
                         onLongClick = { onLongPress(image) },
-                        onCheckboxClick = { isSelected ->
-                            onImageSelected(image, isSelected)
-                        }
+                        onCheckboxClick = { isSelected -> onImageSelected(image, isSelected) }
                     )
                 }
                 item { Spacer(modifier = Modifier.height(40.dp)) }
@@ -283,9 +267,10 @@ fun ProjectDetailScreen(
     }
 }
 
+
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun ImageItem(
+fun MainImageItem(
     image: Image,
     isSelected: Boolean,
     isSelectionMode: Boolean,
@@ -312,23 +297,26 @@ fun ImageItem(
                 )
                 .combinedClickable(
                     onClick = {
-                        multipleImageAnalysisViewModel.viewModelScope.launch {
-                            if (multipleImageAnalysisViewModel.doesIntensityPlotExist(image.imageId)) {
-                                if (isSelectionMode) {
+
+                        if (isSelectionMode) {
+                            multipleImageAnalysisViewModel.viewModelScope.launch {
+                                if (multipleImageAnalysisViewModel.doesIntensityPlotExist(image.imageId)) {
                                     onCheckboxClick(!isSelected)
                                 } else {
-                                    onClick()
+                                    Toast
+                                        .makeText(
+                                            context,
+                                            "Intensity Plot Not Exist for ${image.name}",
+                                            Toast.LENGTH_SHORT
+                                        )
+                                        .show()
                                 }
-                            } else {
-                                Toast
-                                    .makeText(
-                                        context,
-                                        "Intensity Plot Not Exist for ${image.name}",
-                                        Toast.LENGTH_SHORT
-                                    )
-                                    .show()
                             }
+                        } else {
+                            onClick()
                         }
+
+
                     },
                     onLongClick = {
                         multipleImageAnalysisViewModel.viewModelScope.launch {
@@ -388,6 +376,7 @@ fun ImageItem(
     }
 }
 
+
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun SplitImageItem(
@@ -395,6 +384,7 @@ fun SplitImageItem(
     isSelected: Boolean,
     isSelectionMode: Boolean,
     multipleImageAnalysisViewModel: MultipleImageAnalysisViewModel,
+    projectViewModel: ProjectViewModel,
     onClick: (Image) -> Unit,
     onLongClick: () -> Unit,
     onCheckboxClick: (Boolean) -> Unit
@@ -402,35 +392,38 @@ fun SplitImageItem(
     val imageFile = File(image.croppedImagePath)
     val context = LocalContext.current
 
+    // ✅ Handle Null Case: If `image.hour` is null, show "Select Hour"
+    var selectedHour by rememberSaveable {
+        mutableIntStateOf(image.hour?.toIntOrNull() ?: -1) // -1 means "Select Hour"
+    }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(8.dp)
             .combinedClickable(
                 onClick = {
-                    multipleImageAnalysisViewModel.viewModelScope.launch {
-                        if (multipleImageAnalysisViewModel.doesIntensityPlotExist(image.imageId)) {
-                            if (isSelectionMode) {
+                    if (isSelectionMode) {
+                        multipleImageAnalysisViewModel.viewModelScope.launch {
+                            if (multipleImageAnalysisViewModel.doesIntensityPlotExist(image.imageId)) {
                                 onCheckboxClick(!isSelected)
                             } else {
-                                onClick(image)
+                                Toast
+                                    .makeText(
+                                        context,
+                                        "Intensity Plot Not Exist for ${image.name}",
+                                        Toast.LENGTH_SHORT
+                                    )
+                                    .show()
                             }
-                        } else {
-                            Toast
-                                .makeText(
-                                    context,
-                                    "Intensity Plot Not Exist for ${image.name}",
-                                    Toast.LENGTH_SHORT
-                                )
-                                .show()
                         }
+                    } else {
+                        onClick(image)
                     }
                 },
                 onLongClick = {
                     multipleImageAnalysisViewModel.viewModelScope.launch {
-
                         if (multipleImageAnalysisViewModel.doesIntensityPlotExist(image.imageId)) {
-
                             onLongClick()
                         } else {
                             Toast
@@ -450,50 +443,135 @@ fun SplitImageItem(
             containerColor = if (isSelected) Color.Blue.copy(alpha = 0.3f) else Color.White
         ),
     ) {
-        Row(
-            modifier = Modifier.padding(8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // Image Preview
-            if (imageFile.exists()) {
-                AsyncImage(
-                    model = ImageRequest.Builder(LocalContext.current)
-                        .data(imageFile)
-                        .build(),
-                    contentDescription = "Split Image",
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .size(50.dp)
-                        .padding(8.dp)
-                )
-            } else {
-                Image(
-                    painter = painterResource(id = R.drawable.baseline_warning_24),
-                    contentDescription = "Missing Image",
-                    modifier = Modifier
-                        .size(50.dp)
-                        .padding(8.dp)
-                )
+        Column(modifier = Modifier.padding(8.dp)) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // 🔹 Image Preview
+                if (imageFile.exists()) {
+                    AsyncImage(
+                        model = ImageRequest.Builder(LocalContext.current)
+                            .data(imageFile)
+                            .build(),
+                        contentDescription = "Split Image",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .size(50.dp)
+                            .padding(8.dp)
+                    )
+                } else {
+                    Image(
+                        painter = painterResource(id = R.drawable.baseline_warning_24),
+                        contentDescription = "Missing Image",
+                        modifier = Modifier
+                            .size(50.dp)
+                            .padding(8.dp)
+                    )
+                }
+
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(text = image.name, fontWeight = FontWeight.Bold)
+                    Text(
+                        text = AppUtils.decodeTimestamp(image.timeStamp),
+                        fontSize = 12.sp,
+                        color = Color.Gray
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                // Show Checkbox **ONLY when selection mode is enabled**
+                if (isSelectionMode) {
+                    Checkbox(
+                        checked = isSelected,
+                        onCheckedChange = { onCheckboxClick(it) },
+                        modifier = Modifier.padding(8.dp)
+                    )
+                }
             }
 
-            Column(modifier = Modifier.weight(1f)) {
-                Text(text = image.name, fontWeight = FontWeight.Bold)
-                Text(
-                    text = AppUtils.decodeTimestamp(image.timeStamp),
-                    fontSize = 12.sp,
-                    color = Color.Gray
-                )
+            // 🔹 Custom Dropdown Below
+            Spacer(modifier = Modifier.height(8.dp))
+
+            HourDropdown(
+                selectedHour = selectedHour,
+                onHourSelected = { newHour ->
+                    if (newHour != selectedHour) { // ✅ Prevent unnecessary database updates
+                        selectedHour = newHour
+                        projectViewModel.viewModelScope.launch {
+                            projectViewModel.updateImageDetailByImageId(
+                                image.copy(hour = newHour.toString())
+                            )
+                        }
+                    }
+                }
+            )
+        }
+    }
+}
+
+
+@Composable
+fun HourDropdown(
+    selectedHour: Int,
+    onHourSelected: (Int) -> Unit
+) {
+    var isDropdownExpanded by remember { mutableStateOf(false) }
+
+    val hoursList = (-1..24).map { // ✅ Add "-1" for "Select Hour"
+        it to if (it == -1) "Select Hour" else "$it Hour${if (it > 1) "s" else ""}"
+    }
+
+    Box(modifier = Modifier.fillMaxWidth()) {
+        Column {
+            // 🔹 TextField Styled as Button
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color(0xFFDCD6FA), shape = RoundedCornerShape(8.dp))
+                    .clickable { isDropdownExpanded = !isDropdownExpanded }
+                    .padding(12.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = hoursList.find { it.first == selectedHour }?.second ?: "Select Hour",
+                        color = Color.Black
+                    )
+                    Icon(
+                        imageVector = Icons.Default.ArrowDropDown,
+                        contentDescription = "Dropdown Arrow"
+                    )
+                }
             }
 
-            // Show Checkbox **ONLY when selection mode is enabled**
-            if (isSelectionMode) {
-                Checkbox(
-                    checked = isSelected,
-                    onCheckedChange = { onCheckboxClick(it) },
+            // 🔹 Custom Dropdown List
+            AnimatedVisibility(visible = isDropdownExpanded) {
+                Column(
                     modifier = Modifier
-                        .align(Alignment.CenterVertically)
-                        .padding(8.dp)
-                )
+                        .fillMaxWidth()
+                        .background(Color.White, shape = RoundedCornerShape(8.dp))
+                        .border(1.dp, Color.Gray, RoundedCornerShape(8.dp))
+                        .padding(4.dp)
+                ) {
+                    hoursList.forEach { (value, label) ->
+                        Text(
+                            text = label,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    onHourSelected(value)
+                                    isDropdownExpanded = false
+                                }
+                                .padding(12.dp),
+                            color = Color.Black
+                        )
+                        Divider(color = Color.Gray.copy(alpha = 0.3f))
+                    }
+                }
             }
         }
     }

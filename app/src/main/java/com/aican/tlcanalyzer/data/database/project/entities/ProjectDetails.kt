@@ -15,5 +15,6 @@ data class ProjectDetails(
     val projectImageId: String? = null,
     val sourceImageCount: Int = 0,
     val splitImageCount: Int = 0,
-    val noOfRfCounts: Int = 100
+    val noOfRfCounts: Int = 100,
+    val detectionType: String? = null
 )

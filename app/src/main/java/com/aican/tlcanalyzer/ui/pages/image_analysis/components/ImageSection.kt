@@ -32,9 +32,11 @@ fun ImageSection(imageState: ImageState, zoomable: Boolean = false) {
                     .fillMaxWidth()
                     .height(200.dp)
             ) {
+
                 ZoomableImage(
                     imagePath = imageState.imagePath,
                     description = imageState.description,
+                    imageBitmap = imageState.imageBitmap,
                     recomposeKey = imageState.changeTrigger.hashCode(), // Use trigger to recompose
                     zoomable = zoomable
                 )

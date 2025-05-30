@@ -28,6 +28,7 @@ data class ContourData(
     val rfBottom: String,
     val cv: String,
     val chemicalName: String,
+    var selected: Boolean = true,
     val type: ContourType // Type of the contour (AUTO, RECTANGULAR, CIRCULAR)
 )
 

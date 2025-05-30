@@ -19,6 +19,8 @@ import androidx.room.*
 data class IntensityPlotData(
     @PrimaryKey(autoGenerate = true) val intensityPlotId: Int = 0, // Auto-generated unique ID for each row
     val imageId: String,             // Foreign key linking to the Image table
-    val rf: Double,                  // Retention factor (X-axis value in the plot)
-    val intensity: Double            // Intensity or pixel value (Y-axis value in the plot)
+    val rf: Double,                  // Retention factor (X-axis value in the plot) 1 - 100
+    val intensity: Double            // Intensity or pixel value (Y-axis value in the plot) 0 - 255
 )
+
+// 50 - 244 51 - 230
